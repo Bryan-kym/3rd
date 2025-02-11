@@ -32,6 +32,7 @@
                 <input type="hidden" id="taxagent_type" name="taxagent_type" value="">
                 <input type="hidden" id="taxagent_type2" name="taxagent_type2" value="">
                 <input type="hidden" id="taxagent_name2" name="taxagent_name2" value="">
+                <input type="hidden" id="uploadedFilePath" name="uploadedFilePath" value="">
 
                 <!-- Attachment Sections -->
                  <!-- students -->
@@ -174,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const taxagent_type = localStorage.getItem('userType') || '';
     const taxagent_type2 = localStorage.getItem('userType2') || '';
     const taxagent_name2 = localStorage.getItem('orgNameta') || '';
+    const uploadedFilePath = localStorage.getItem('uploadedFilePath') || '';
 
     // Set values to hidden fields
     document.getElementById('category').value = category;
@@ -198,6 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('taxagent_type').value = taxagent_type;
     document.getElementById('taxagent_type2').value = taxagent_type2;
     document.getElementById('taxagent_name2').value = taxagent_name2;
+    document.getElementById('uploadedFilePath').value = uploadedFilePath;
 
     // Call the function to show the correct attachment section
     showAttachmentSection(category);

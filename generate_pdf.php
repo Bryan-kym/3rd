@@ -27,7 +27,7 @@ $pdf->MultiCell(0, 10, $ndaContent);
 
 // Define the file path and name
 $filePath = 'saved_pdfs/';
-$fileName = 'NDA_' . time() . '.pdf';
+$fileName = 'NDA_'. $name . time() . '.pdf';
 $fullPath = $filePath . $fileName;
 
 // Ensure the directory exists

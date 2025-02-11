@@ -12,7 +12,7 @@
 
     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7kZ4mc9sIOUWb6YZIe1M9j6jYbM9GLZ4S8" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76A2z02tPzFf2hCbYj2u5Yig5D51v3y5LGTVKx6A7M3e4V7E6T4yAdh96z6pc6E" crossorigin="anonymous"></script> -->
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <style>
         body,
         html {

@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $taxagent_type = $_POST['taxagent_type'];
     $taxagent_type2 = $_POST['taxagent_type2'];
     $taxagent_name2 = $_POST['taxagent_name2'];
+    $uploadedFilePath = $_POST['uploadedFilePath'];
 
 
     if ($category === 'privatecompany' | $category === 'publiccompany') {
@@ -133,6 +134,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
             }
 
+            // Check and update the NDA form record
+            if (!empty($uploadedFilePath)) {
+                $stmtUpdateNDA = $conn->prepare("UPDATE requestors_documents 
+                                         SET requester_id = ? , request_id = ?, last_edited_by = ?
+                                         WHERE document_file_path = ?");
+                if ($stmtUpdateNDA) {
+                    $stmtUpdateNDA->bind_param("iiss", $personalInfoId, $requestId, $names, $uploadedFilePath);
+                    if (!$stmtUpdateNDA->execute()) {
+                        echo "Error updating NDA form record: " . $stmtUpdateNDA->error;
+                        exit;
+                    }
+                    $stmtUpdateNDA->close();
+                } else {
+                    echo "Error preparing NDA form update query.";
+                    exit;
+                }
+            }
+
             // Rename the file based on personalInfoId and surname
             $newFileName = $personalInfoId . '_' . $surname . '.' . $fileExtension;
             $uploadFile = $uploadDir . $newFileName; // New file path
@@ -142,9 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $uploadedFiles[] = $uploadFile; // Add file path to array
 
                 // Insert file paths into attachments table
-                $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, document_type, document_name) 
-                VALUES (?, ?, ?, ?,?)");
-                $stmt3->bind_param("iisss", $requestId, $personalInfoId, $uploadFile, $fileType, $docType);
+                $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, document_type, document_name, last_edited_by) 
+                VALUES (? , ? , ? , ? , ? , ?)");
+                $stmt3->bind_param("iissss", $requestId, $personalInfoId, $uploadFile, $fileType, $docType, $names);
                 if (!$stmt3->execute()) {
                     echo "Error saving attachment: " . $stmt3->error;
                 }
