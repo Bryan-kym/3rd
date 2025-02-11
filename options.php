@@ -6,7 +6,7 @@
             <h3 class="card-title">Select Your Category</h3>
             <p>Please choose your category from the options below.</p>
 
-            <!-- Category Selection Form -->
+            <!-- Category Selection Form s-->
             <form id="step2Form">
                 <div class="row">
                     <!-- Radio Buttons Styled as Buttons -->

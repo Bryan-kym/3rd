@@ -1,5 +1,5 @@
 <?php
-// Path to the image file
+// Path to the image files
 $imagePath = 'assets/images/pdf_header.png';
 
 // Check if the image exists

@@ -6,7 +6,7 @@
             <h3 class="card-title">Organization Information</h3>
             <p>Please provide the details of your organization.</p>
 
-            <!-- Organization Information Form -->
+            <!-- Organization Information Form s-->
             <form id="orgInfoForm">
                 <div class="form-group">
                     <label for="orgName">Organization Name:</label>

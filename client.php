@@ -6,7 +6,7 @@
             <h3 class="card-title">Client Information</h3>
             <p>Please fill in your information below.</p>
 
-            <!-- Personal Information Form -->
+            <!-- Personal Information Form c-->
             <form id="step3Form">
                 <!-- Dropdown to select Individual or Organization -->
                 <div class="form-group">

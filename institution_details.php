@@ -6,7 +6,7 @@
             <h3 class="card-title">Institution Details</h3>
             <p>Please fill in your institution's details below.</p>
 
-            <!-- Institution Details Form -->
+            <!-- Institution Details Form ff -->
             <form id="institutionForm">
                 <div class="form-group">
                     <label for="inst_name">Institution Name</label>

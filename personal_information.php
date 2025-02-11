@@ -6,7 +6,7 @@
             <h3 class="card-title">Personal Information</h3>
             <p>Please fill in your personal information below.</p>
 
-            <!-- Personal Information Form -->
+            <!-- Personal Information Form s-->
             <form id="step3Form">
                 <div class="form-group">
                     <label for="surname">Surname</label>

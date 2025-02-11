@@ -2,7 +2,7 @@
 // Include database connection and configuration
 include 'config.php';
 
-// Check if the form is submitted
+// Check if the form is submitted s
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve hidden form data
     $category = $_POST['category'];

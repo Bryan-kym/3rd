@@ -42,7 +42,7 @@
 
         // Fetch the Base64 image from PHP script
         const imageResponse = await fetch('image_encode.php');
-        const imageData = await imageResponse.text(); // The Base64 image string
+        const imageData = await imageResponse.text(); // The Base64 image strings
 
         // Create a new PDF
         const {

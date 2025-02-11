@@ -6,7 +6,7 @@
             <h3 class="card-title">Data Request</h3>
             <p>Please fill in the details of your data request below.</p>
 
-            <!-- Data Request Form -->
+            <!-- Data Request Form form -->
             <form id="dataRequestForm" method="POST" action="your_submission_handler.php">
                 <!-- Hidden input for category -->
                 <input type="hidden" name="category" id="category" value="">

@@ -4,7 +4,7 @@ require('libs/fpdf.php');
 // Get name from POST request
 $name = $_POST['name'] ?? '';
 
-// Define NDA content
+// Define NDA contents
 $ndaContent = "
 Non-Disclosure Agreement (NDA)
 

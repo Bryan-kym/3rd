@@ -10,7 +10,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 
 // Check if the data contains 'pdf' and 'name'
 if (isset($data['pdf']) && isset($data['name'])) {
-    $pdfData = $data['pdf'];  // Base64-encoded PDF data
+    $pdfData = $data['pdf'];  // Base64-encoded PDF datas
     $name = $data['name'];    // User's name as the signature
     $file_dbname = 'NDA form';
     $filetype = 'application/pdf';
