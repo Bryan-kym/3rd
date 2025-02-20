@@ -176,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const taxagent_type2 = localStorage.getItem('userType2') || '';
     const taxagent_name2 = localStorage.getItem('orgNameta') || '';
     const uploadedFilePath = localStorage.getItem('uploadedFilePath') || '';
+    const nda_form = localStorage.getItem('nda_form') || '';
 
     // Set values to hidden fields
     document.getElementById('category').value = category;
@@ -201,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('taxagent_type2').value = taxagent_type2;
     document.getElementById('taxagent_name2').value = taxagent_name2;
     document.getElementById('uploadedFilePath').value = uploadedFilePath;
+    document.getElementById('nda_form').value = nda_form;
 
     // Call the function to show the correct attachment section
     showAttachmentSection(category);

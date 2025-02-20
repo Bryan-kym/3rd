@@ -15,8 +15,11 @@ if (isset($data['pdf']) && isset($data['name'])) {
     $file_dbname = 'NDA form';
     $filetype = 'application/pdf';
 
+    // Generate a unique name once
+    $uniqueName = uniqid('nda_'); // e.g. nda_5f2b9c7a9d2e1
     // Path to save the PDF file
-    $filePath = 'uploads/' . uniqid('nda_') . '.pdf';  // Unique file name
+    $filePath = 'uploads/' . $uniqueName . '.pdf';
+    $filePathdb = '3rd-be/uploads/' . $uniqueName . '.pdf';
 
     // Decode the Base64 data and save the PDF to the server
     if (file_put_contents($filePath, base64_decode($pdfData))) {
@@ -24,10 +27,10 @@ if (isset($data['pdf']) && isset($data['name'])) {
         $stmt = $conn->prepare("INSERT INTO requestors_documents (document_name, document_file_path, last_edited_on, document_type) VALUES (?, ?, ? , ?)");
         if ($stmt) {
             // Bind parameters and execute the query
-            $stmt->bind_param("ssss", $file_dbname, $filePath, $timestamptoday, $filetype);
+            $stmt->bind_param("ssss", $file_dbname, $filePathdb, $timestamptoday, $filetype);
             if ($stmt->execute()) {
                 // Success - return file path and success status as JSON
-                echo json_encode(['success' => true, 'filePath' => $filePath]);
+                echo json_encode(['success' => true, 'filePath' => $filePathdb]);
             } else {
                 // Failure - unable to insert into database
                 echo json_encode(['success' => false, 'message' => 'Failed to save data to database']);
@@ -48,4 +51,3 @@ if (isset($data['pdf']) && isset($data['name'])) {
 
 // Close database connection
 $conn->close();
-?>

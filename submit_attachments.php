@@ -2,7 +2,7 @@
 // Include database connection and configuration
 include 'config.php';
 
-// Check if the form is submitted s
+// Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve hidden form data
     $category = $_POST['category'];
@@ -32,25 +32,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $taxagent_name2 = $_POST['taxagent_name2'];
     $uploadedFilePath = $_POST['uploadedFilePath'];
 
-
-    if ($category === 'privatecompany' | $category === 'publiccompany') {
+    // Determine the affiliation details
+    if ($category === 'privatecompany' || $category === 'publiccompany') {
         $affiliation_name = $org_name;
         $affiliation_email = $orgEmail;
         $affiliation_phone = $orgPhone;
         $affiliation_kraPin = $orgKraPin;
-    } else if ($category === 'student' | $category === 'researcher') {
+    } elseif ($category === 'student' || $category === 'researcher') {
         $affiliation_name = $inst_name;
         $affiliation_email = $inst_email;
         $affiliation_phone = $inst_phone;
         $affiliation_kraPin = '';
-    } else if ($category === 'taxagent') {
-        $affiliation_name = $org_name . ' ' . $taxagent_name2; // Combine names
+    } elseif ($category === 'taxagent') {
+        $affiliation_name = $org_name . ' ' . $taxagent_name2;
         $affiliation_email = $orgEmail;
         $affiliation_phone = $orgPhone;
         $affiliation_kraPin = $orgKraPin;
         $client_type = $taxagent_type2;
     }
-
 
     // Insert personal information into requestors table
     $stmt = $conn->prepare("INSERT INTO requestors (fullnames, phone_number, email, requester_type, 
@@ -74,111 +73,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$stmt->execute()) {
         echo "Error saving personal information: " . $stmt->error;
-        exit; // Stop execution if there is an error
+        exit;
     }
 
     // Get the ID of the last inserted personal info record
     $personalInfoId = $stmt->insert_id;
 
-    // Insert request details into requests table
-    $stmt2 = $conn->prepare("INSERT INTO requests (requested_by, description, specific_fields, period_from, period_to, request_purpose) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt2->bind_param("isssss", $personalInfoId, $dataDescription, $specificFields, $dateFrom, $dateTo, $requestReason);
+    // === Generate Tracking ID ===
+    $year = date("y"); // Get last two digits of the current year (e.g., "25" for 2025)
+    $result = $conn->query("SELECT MAX(CAST(SUBSTRING_INDEX(tracking_id, '/', -2) AS UNSIGNED)) AS last_number 
+                            FROM requests WHERE tracking_id LIKE 'KRA/CDO/%/$year'");
+
+    $lastNumber = ($result && $row = $result->fetch_assoc()) ? intval($row['last_number']) : 0;
+    $newTrackingNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    $trackingID = "KRA/CDO/$newTrackingNumber/$year";
+
+    // Insert request details into requests table with tracking ID
+    $stmt2 = $conn->prepare("INSERT INTO requests (requested_by, description, specific_fields, period_from, period_to, request_purpose, tracking_id, date_requested) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt2->bind_param("isssssss", $personalInfoId, $dataDescription, $specificFields, $dateFrom, $dateTo, $requestReason, $trackingID, $timestamptoday);
 
     if (!$stmt2->execute()) {
         echo "Error saving request details: " . $stmt2->error;
-        exit; // Stop execution if there is an error
+        exit;
     }
 
-    // Get the ID of the last inserted request record
     $requestId = $stmt2->insert_id;
+    // //////////////////////////////////////////////////////////////////////////
 
+    $stmt4 = $conn->prepare("UPDATE requestors_documents 
+    SET request_id = ?, requester_id = ?, last_edited_by = ?, last_edited_on = ? 
+    WHERE document_file_path = ?");
+    $stmt4->bind_param("iisss", $requestId, $personalInfoId, $names, $timestamptoday, $uploadedFilePath);
 
-    // Handle file uploads
-    $uploadedFiles = []; // Array to hold file paths
-
+    if (!$stmt4->execute()) {
+        echo "Error saving request details: " . $stmt4->error;
+        exit;
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // === Handle File Uploads ===
     foreach ($_FILES as $inputName => $file) {
         if ($file['error'] == UPLOAD_ERR_OK) {
-            $uploadDir = 'uploads/'; // Directory for uploads
-            $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)); // Get file extension
-            $fileType = $file['type']; // Get MIME type
+            $uploadDir = 'uploads/';
+            $uploadDirdb = '3rd-be/uploads/';
+            $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
+            // Document type mapping
+            $docTypes = [
+                'nacostiPermit' => 'NACOSTI Permit (Student)',
+                'introductionLetter' => 'Letter of Introduction (Student)',
+                'nacostiPermitResearcher' => 'NACOSTI Permit (Researcher)',
+                'introductionLetterResearcher' => 'Letter of Introduction (Researcher)',
+                'idPassport' => 'ID/Passport',
+                'pinCertificate' => 'KRA PIN Certificate',
+                'consentLetter' => 'Consent Letter from Client',
+                'requestLetter' => 'Request Letter (Authorized Signatory)',
+                'requestLetterSignatoryOne' => 'Request Letter (Two Signatories)'
+            ];
+            $docType = $docTypes[$inputName] ?? 'Unknown Document';
 
-            // Determine the document type based on the input name or ID
-            switch ($inputName) {
-                case 'nacostiPermit':
-                    $docType = 'NACOSTI Permit (Student)';
-                    break;
-                case 'introductionLetter':
-                    $docType = 'Letter of Introduction from instituition (Student)';
-                    break;
-                case 'nacostiPermitResearcher':
-                    $docType = 'NACOSTI Permit (Researcher)';
-                    break;
-                case 'introductionLetterResearcher':
-                    $docType = 'Letter of introduction from instituition (Researcher)';
-                    break;
-                case 'idPassport':
-                    $docType = 'ID/Passport';
-                    break;
-                case 'pinCertificate':
-                    $docType = 'KRA pin certificate';
-                    break;
-                case 'consentLetter':
-                    $docType = 'Constent letter from client';
-                    break;
-                case 'requestLetter':
-                    $docType = 'Request letter from authorized signatory';
-                    break;
-                case 'requestLetterSignatoryOne':
-                    $docType = 'Request letter from two authorized signatories';
-                    break;
-            }
-
-            // Check and update the NDA form record
-            if (!empty($uploadedFilePath)) {
-                $stmtUpdateNDA = $conn->prepare("UPDATE requestors_documents 
-                                         SET requester_id = ? , request_id = ?, last_edited_by = ?
-                                         WHERE document_file_path = ?");
-                if ($stmtUpdateNDA) {
-                    $stmtUpdateNDA->bind_param("iiss", $personalInfoId, $requestId, $names, $uploadedFilePath);
-                    if (!$stmtUpdateNDA->execute()) {
-                        echo "Error updating NDA form record: " . $stmtUpdateNDA->error;
-                        exit;
-                    }
-                    $stmtUpdateNDA->close();
-                } else {
-                    echo "Error preparing NDA form update query.";
-                    exit;
-                }
-            }
-
-            // Rename the file based on personalInfoId and surname
+            // Rename and save file
             $newFileName = $personalInfoId . '_' . $surname . '.' . $fileExtension;
-            $uploadFile = $uploadDir . $newFileName; // New file path
+            $uploadFile = $uploadDir . $newFileName;
+            $uploadFiledb = $uploadDirdb . $newFileName;
 
-            // Move the uploaded file
             if (move_uploaded_file($file['tmp_name'], $uploadFile)) {
-                $uploadedFiles[] = $uploadFile; // Add file path to array
-
-                // Insert file paths into attachments table
-                $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, document_type, document_name, last_edited_by) 
-                VALUES (? , ? , ? , ? , ? , ?)");
-                $stmt3->bind_param("iissss", $requestId, $personalInfoId, $uploadFile, $fileType, $docType, $names);
+                $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, document_type, document_name, last_edited_by, last_edited_on) 
+                                         VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt3->bind_param("iisssss", $requestId, $personalInfoId, $uploadFiledb, $fileExtension, $docType, $names, $timestamptoday);
                 if (!$stmt3->execute()) {
                     echo "Error saving attachment: " . $stmt3->error;
                 }
             } else {
                 echo "Error uploading file: " . $file['name'];
             }
-        } else {
-            echo "Error with file: " . $file['name'] . " - Error Code: " . $file['error'];
         }
     }
-
-
-    // Redirect to a success page or confirmation
+    // Redirect to success page
     header("Location: index.php");
     exit();
 }
 
-$conn->close(); // Close database connection
+$conn->close();

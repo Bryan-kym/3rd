@@ -112,13 +112,15 @@
             const data = await response.json();
             if (data.success) {
                 localStorage.setItem('uploadedFilePath', data.filePath);
+                // Assuming you got the JSON response in a variable called responseData:
+                localStorage.setItem('nda_form', data.nda_form);
                 window.location.href = 'options.php'; // Redirect to Step 2
             } else {
                 throw new Error(data.message || 'Failed to save PDF');
             }
         } catch (error) {
             console.error('Error :', error);
-           
+
         }
     });
 </script>
