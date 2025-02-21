@@ -19,7 +19,7 @@ if (isset($data['pdf']) && isset($data['name'])) {
     $uniqueName = uniqid('nda_'); // e.g. nda_5f2b9c7a9d2e1
     // Path to save the PDF file
     $filePath = 'uploads/' . $uniqueName . '.pdf';
-    $filePathdb = '3rd-be/uploads/' . $uniqueName . '.pdf';
+    $filePathdb = $documents_file_path . $uniqueName . '.pdf';
 
     // Decode the Base64 data and save the PDF to the server
     if (file_put_contents($filePath, base64_decode($pdfData))) {
