@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($_FILES as $inputName => $file) {
         if ($file['error'] == UPLOAD_ERR_OK) {
             $uploadDir = 'uploads/';
-            $uploadDirdb = '3rd-be/uploads/';
+            $uploadDirdb = 'localhost/3rd-be/uploads/';
             $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
             // Document type mapping
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Rename and save file
             $newFileName = $personalInfoId . '_' . $surname . '.' . $fileExtension;
             $uploadFile = $uploadDir . $newFileName;
-            $uploadFiledb = $uploadDirdb . $newFileName;
+            $uploadFiledb = $documents_file_path . $newFileName;
 
             if (move_uploaded_file($file['tmp_name'], $uploadFile)) {
                 $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, document_type, document_name, last_edited_by, last_edited_on) 
