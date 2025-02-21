@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Insert request details into requests table with tracking ID
     $stmt2 = $conn->prepare("INSERT INTO requests (requested_by, description, specific_fields, period_from, period_to, request_purpose, tracking_id, date_requested) 
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt2->bind_param("isssssss", $personalInfoId, $dataDescription, $specificFields, $dateFrom, $dateTo, $requestReason, $trackingID, $timestamptoday);
+    $stmt2->bind_param("isssssss", $personalInfoId, $dataDescription, $specificFields, $dateFrom, $dateTo, $requestReason, $trackingID, $date_stamp);
 
     if (!$stmt2->execute()) {
         echo "Error saving request details: " . $stmt2->error;
