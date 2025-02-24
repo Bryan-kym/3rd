@@ -119,7 +119,7 @@
                 throw new Error(data.message || 'Failed to save PDF');
             }
         } catch (error) {
-            console.error('Error :', error);
+            console.error('Error creating NDA:', error);
 
         }
     });
