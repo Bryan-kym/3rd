@@ -1,4 +1,7 @@
-<?php include 'header.php'; ?>
+<?php 
+session_start();
+include 'header.php'; 
+?>
 
 <div class="container mt-5">
     <div class="card">
@@ -6,7 +9,7 @@
             <h3 class="card-title">Personal Information</h3>
             <p>Please fill in your personal information below.</p>
 
-            <!-- Personal Information Form s-->
+            <!-- Personal Information Form -->
             <form id="step3Form">
                 <div class="form-group">
                     <label for="surname">Surname</label>
@@ -42,6 +45,28 @@
     </div>
 </div>
 
+<!-- OTP Modal -->
+<div class="modal fade" id="otpModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Verify Your Email</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>An OTP has been sent to your email. Please enter it below:</p>
+        <input type="text" class="form-control" id="otpInput" placeholder="Enter OTP">
+        <p id="otpError" class="text-danger"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="resendOtpBtn">Resend OTP</button>
+        <button type="button" class="btn btn-primary" id="verifyOtpBtn">Verify OTP</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
 // Enable 'Next' button when required fields are filled
 const requiredFields = document.querySelectorAll('#step3Form input[required]');
@@ -60,34 +85,87 @@ document.addEventListener('DOMContentLoaded', function() {
     const category = localStorage.getItem('selectedCategory');
     if (category === 'student') {
         document.getElementById('kraPinField').style.display = 'none';
-    } else {
-        document.getElementById('kraPinField').style.display = 'block'; // Show KRA PIN for other categories
     }
 });
 
-// Navigation to next or previous steps
 document.getElementById('nextBtn').addEventListener('click', function() {
-    const category = localStorage.getItem('selectedCategory');
+    let email = document.getElementById('email').value;
 
-    // Store personal information in localStorage
-    localStorage.setItem('surname', document.getElementById('surname').value);
-    localStorage.setItem('othernames', document.getElementById('othernames').value);
-    localStorage.setItem('email', document.getElementById('email').value);
-    localStorage.setItem('phone', document.getElementById('phone').value);
-    localStorage.setItem('kra_pin', document.getElementById('kra_pin').value);
-    
-    // Redirect based on selected category
-    if (category === 'student' || category === 'researcher') {
-        window.location.href = 'institution_details.php'; // Redirect to institution details page
-    } else if (category === 'privatecompany' || category === 'publiccompany') {
-        window.location.href = 'org.php'; // Redirect to organization info page
-    } else {
-        window.location.href = 'data_request.php'; // Redirect to data request page for others
-    }
+    fetch('send_otp.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'email=' + encodeURIComponent(email)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            $('#otpModal').modal('show');
+        } else {
+            alert("Error sending OTP. Try again.");
+        }
+    })
+    .catch(error => console.error('Error:', error));
 });
 
+// OTP Verification
+document.getElementById('verifyOtpBtn').addEventListener('click', function() {
+    let email = document.getElementById('email').value;
+    let otp = document.getElementById('otpInput').value;
+
+    fetch('verify_otp.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            $('#otpModal').modal('hide'); // Close OTP modal
+
+            // Retrieve selected category from localStorage
+            const category = localStorage.getItem('selectedCategory');
+
+            // Redirect based on selected category
+            if (category === 'student' || category === 'researcher') {
+                window.location.href = 'institution_details.php';
+            } else if (category === 'privatecompany' || category === 'publiccompany') {
+                window.location.href = 'org.php';
+            } else {
+                window.location.href = 'data_request.php';
+            }
+
+        } else {
+            document.getElementById('otpError').innerText = data.message;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+
+// Resend OTP
+document.getElementById('resendOtpBtn').addEventListener('click', function() {
+    let email = document.getElementById('email').value;
+
+    fetch('send_otp.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'email=' + encodeURIComponent(email)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert("A new OTP has been sent.");
+        } else {
+            alert("Error resending OTP. Try again.");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+
+// Back button
 document.getElementById('backBtn').addEventListener('click', function() {
-    window.location.href = 'options.php'; // Redirect back to Step 2
+    window.location.href = 'options.php';
 });
 </script>
 
