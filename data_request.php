@@ -60,63 +60,80 @@
         </div>
     </div>
 </div>
-
 <script>
-// Automatically fill the input box when selecting a field option
+// Function to load saved data into form fields
+function loadDataRequestInfo() {
+    let dataRequestInfo = JSON.parse(localStorage.getItem('dataRequestInfo')) || {};
+
+    document.getElementById('dataDescription').value = dataRequestInfo.dataDescription || '';
+    document.getElementById('specificFields').value = dataRequestInfo.specificFields || '';
+    document.getElementById('dateFrom').value = dataRequestInfo.dateFrom || '';
+    document.getElementById('dateTo').value = dataRequestInfo.dateTo || '';
+    document.getElementById('requestReason').value = dataRequestInfo.requestReason || '';
+}
+
+// Prevent duplicate field selections
 document.querySelectorAll('.field-option').forEach(option => {
     option.addEventListener('click', function() {
         const fieldInput = document.getElementById('specificFields');
-        let currentValue = fieldInput.value;
+        let dataRequestInfo = JSON.parse(localStorage.getItem('dataRequestInfo')) || {};
+        let selectedFields = fieldInput.value ? fieldInput.value.split(', ') : [];
         const newValue = this.getAttribute('data-value');
 
-        if (currentValue) {
-            currentValue += ', ' + newValue; // Append if there's already a value
-        } else {
-            currentValue = newValue; // Set the new value if empty
+        if (!selectedFields.includes(newValue)) {
+            selectedFields.push(newValue);
+            fieldInput.value = selectedFields.join(', ');
+            dataRequestInfo.specificFields = fieldInput.value;
+            localStorage.setItem('dataRequestInfo', JSON.stringify(dataRequestInfo));
         }
-
-        fieldInput.value = currentValue;
     });
 });
 
+// Load saved data on page load
+document.addEventListener('DOMContentLoaded', loadDataRequestInfo);
 
-// Set the category value based on user selection
-function setCategory(category) {
-    document.getElementById('category').value = category;
+// Validate all required fields
+function validateForm() {
+    let dataDescription = document.getElementById('dataDescription').value.trim();
+    let specificFields = document.getElementById('specificFields').value.trim();
+    let dateFrom = document.getElementById('dateFrom').value.trim();
+    let dateTo = document.getElementById('dateTo').value.trim();
+    let requestReason = document.getElementById('requestReason').value.trim();
+
+    if (!dataDescription || !specificFields || !dateFrom || !dateTo || !requestReason) {
+        alert("Please fill in all required fields before proceeding.");
+        return false;
+    }
+    return true;
 }
 
-// Navigation to previous step based on user category
-document.getElementById('backBtn').addEventListener('click', function() {
-    const category = localStorage.getItem('selectedCategory');
+// Save data and go to the next page
+document.getElementById('nextBtn').addEventListener('click', function() {
+    if (validateForm()) {
+        let dataRequestInfo = {
+            dataDescription: document.getElementById('dataDescription').value,
+            specificFields: document.getElementById('specificFields').value,
+            dateFrom: document.getElementById('dateFrom').value,
+            dateTo: document.getElementById('dateTo').value,
+            requestReason: document.getElementById('requestReason').value
+        };
 
-    if (category === 'student' || category === 'researcher') {
-        window.location.href = 'institution_details.php'; // Redirect to institution details page
-    } else if (category === 'privatecompany' || category === 'publiccompany') {
-        window.location.href = 'org.php'; // Redirect to organization page
-    } else if (category === 'taxagent') {
-        window.location.href = 'client.php'; // Redirect to client page
-    } else {
-        window.location.href = 'personal_information.php'; // Redirect back to personal information page
+        localStorage.setItem('dataRequestInfo', JSON.stringify(dataRequestInfo));
+        window.location.href = 'attachments.php';
     }
 });
 
-// Navigate to attachments page
-document.getElementById('nextBtn').addEventListener('click', function() {
-    const category = localStorage.getItem('selectedCategory');
+// Handle Back Button
+document.getElementById('backBtn').addEventListener('click', function() {
+    window.location.href = 'previous_page.php'; // Update with actual previous page
+});
 
-    // Store data request details in localStorage (if needed for future use)
-    localStorage.setItem('dataDescription', document.getElementById('dataDescription').value);
-    localStorage.setItem('specificFields', document.getElementById('specificFields').value);
-    localStorage.setItem('dateFrom', document.getElementById('dateFrom').value);
-    localStorage.setItem('dateTo', document.getElementById('dateTo').value);
-    localStorage.setItem('requestReason', document.getElementById('requestReason').value);
-
-    // Set the category value before redirection
-    setCategory(category); // Call this function before redirecting
-
-    // Redirect to the attachments page
-    window.location.href = 'attachments.php'; // Redirect to attachments page
+// Clear localStorage when the form is submitted (optional)
+document.getElementById('dataRequestForm').addEventListener('submit', function() {
+    localStorage.removeItem('dataRequestInfo');
 });
 </script>
+
+
 
 <?php include 'footer.php'; ?>

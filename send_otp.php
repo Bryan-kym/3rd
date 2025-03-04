@@ -8,6 +8,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $otp = rand(100000, 999999);
     $_SESSION['otp'] = $otp;
 
+    $stmt = $conn->prepare("UPDATE otp_verification set status = 'inactive' WHERE email = ? AND status = 'active'");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+
+
     // Set expiration time (5 minutes)
     $expires_at = date("Y-m-d H:i:s", strtotime("+5 minutes"));
 
