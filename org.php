@@ -32,30 +32,60 @@
         </div>
     </div>
 </div>
-
 <script>
-// Handle navigation to the previous step
+// Function to load saved organization details
+function loadOrgDetails() {
+    let orgDetails = JSON.parse(localStorage.getItem('org_details')) || {};
+
+    document.getElementById('orgName').value = orgDetails.orgName || '';
+    document.getElementById('orgPhone').value = orgDetails.orgPhone || '';
+    document.getElementById('orgEmail').value = orgDetails.orgEmail || '';
+    document.getElementById('orgKraPin').value = orgDetails.orgKraPin || '';
+
+    checkFormCompletion(); // Ensure button state is updated after loading
+}
+
+// Enable 'Next' button when all required fields are filled
+const requiredFields = document.querySelectorAll('#orgInfoForm input[required]');
+const nextBtn = document.getElementById('nextBtn');
+
+function checkFormCompletion() {
+    let allFilled = Array.from(requiredFields).every(field => field.value.trim() !== '');
+    nextBtn.disabled = !allFilled;
+    return allFilled; // Ensures validation properly returns a boolean
+}
+
+// Attach input event listeners for validation
+requiredFields.forEach(field => {
+    field.addEventListener('input', checkFormCompletion);
+});
+
+// Save organization details and move to the next page
+document.getElementById('nextBtn').addEventListener('click', function() {
+    if (!checkFormCompletion()) {
+        alert("Please fill in all required fields before proceeding.");
+        return;
+    }
+
+    let orgDetails = {
+        orgName: document.getElementById('orgName').value.trim(),
+        orgPhone: document.getElementById('orgPhone').value.trim(),
+        orgEmail: document.getElementById('orgEmail').value.trim(),
+        orgKraPin: document.getElementById('orgKraPin').value.trim()
+    };
+
+    localStorage.setItem('org_details', JSON.stringify(orgDetails));
+
+    window.location.href = 'data_request.php'; // Redirect to the next page
+});
+
+// Back button navigation
 document.getElementById('backBtn').addEventListener('click', function() {
     window.location.href = 'personal_information.php'; // Redirect back to the previous step
 });
 
-// Handle navigation to the next step
-document.getElementById('nextBtn').addEventListener('click', function() {
-    // Gather form data
-    const orgName = document.getElementById('orgName').value;
-    const orgPhone = document.getElementById('orgPhone').value;
-    const orgEmail = document.getElementById('orgEmail').value;
-    const orgKraPin = document.getElementById('orgKraPin').value;
-
-    // Store data in localStorage or handle your database submission here
-    localStorage.setItem('orgName', orgName);
-    localStorage.setItem('orgPhone', orgPhone);
-    localStorage.setItem('orgEmail', orgEmail);
-    localStorage.setItem('orgKraPin', orgKraPin);
-
-    // Redirect to the next step (modify this to the appropriate next step page)
-    window.location.href = 'data_request.php'; // Update with the actual next step
-});
+// Load data on page load
+document.addEventListener('DOMContentLoaded', loadOrgDetails);
 </script>
 
 <?php include 'footer.php'; ?>

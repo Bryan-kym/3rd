@@ -7,7 +7,7 @@
             <p>Please fill in the details of your data request below.</p>
 
             <!-- Data Request Form form -->
-            <form id="dataRequestForm" method="POST" action="your_submission_handler.php">
+            <form id="dataRequestForm" method="POST" action="your_submission_handler.php" enctype="multipart/form-data">
                 <!-- Hidden input for category -->
                 <input type="hidden" name="category" id="category" value="">
 
@@ -23,15 +23,14 @@
                     <span class="badge bg-secondary field-option" data-value="Taxpayer Name">Taxpayer Name</span>
                     <span class="badge bg-secondary field-option" data-value="Station">Station</span>
                     <span class="badge bg-secondary field-option" data-value="Amount">Amount</span>
-                    <!-- <span class="badge bg-secondary field-option" data-value="Field 5">Field 5</span> -->
                 </div>
                 <input type="text" class="form-control mb-3" id="specificFields" name="specificFields" placeholder="Selected fields will appear here">
 
-                <!-- Custom fields input -->
-                <!-- <div class="form-group">
-                    <label for="customField">Add Other Fields (comma-separated)</label>
-                    <input type="text" class="form-control" id="customField" placeholder="Type additional fields here">
-                </div> -->
+                <!-- File Upload for Template (Optional) -->
+                <div class="form-group">
+                    <label for="dataTemplate">Upload Specific Template (Optional)</label>
+                    <input type="file" class="form-control" id="dataTemplate" name="dataTemplate" accept=".pdf,.doc,.docx,.xls,.xlsx">
+                </div>
 
                 <div class="row">
                     <div class="col-md-6">
@@ -89,8 +88,31 @@ document.querySelectorAll('.field-option').forEach(option => {
     });
 });
 
-// Load saved data on page load
-document.addEventListener('DOMContentLoaded', loadDataRequestInfo);
+// Validate date fields
+function validateDates() {
+    let dateFrom = document.getElementById('dateFrom').value;
+    let dateTo = document.getElementById('dateTo').value;
+    let today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+    if (dateFrom && dateTo) {
+        if (dateTo < dateFrom) {
+            alert("❌ 'Date To' cannot be earlier than 'Date From'.");
+            document.getElementById('dateTo').value = ""; // Reset invalid input
+            return false;
+        }
+        if (dateFrom > today || dateTo > today) {
+            alert("❌ Dates cannot be in the future.");
+            if (dateFrom > today) document.getElementById('dateFrom').value = "";
+            if (dateTo > today) document.getElementById('dateTo').value = "";
+            return false;
+        }
+    }
+    return true;
+}
+
+// Event listeners for date validation
+document.getElementById('dateFrom').addEventListener('change', validateDates);
+document.getElementById('dateTo').addEventListener('change', validateDates);
 
 // Validate all required fields
 function validateForm() {
@@ -101,7 +123,7 @@ function validateForm() {
     let requestReason = document.getElementById('requestReason').value.trim();
 
     if (!dataDescription || !specificFields || !dateFrom || !dateTo || !requestReason) {
-        alert("Please fill in all required fields before proceeding.");
+        alert("❌ Please fill in all required fields before proceeding.");
         return false;
     }
     return true;
@@ -109,7 +131,7 @@ function validateForm() {
 
 // Save data and go to the next page
 document.getElementById('nextBtn').addEventListener('click', function() {
-    if (validateForm()) {
+    if (validateForm() && validateDates()) {
         let dataRequestInfo = {
             dataDescription: document.getElementById('dataDescription').value,
             specificFields: document.getElementById('specificFields').value,
@@ -118,22 +140,49 @@ document.getElementById('nextBtn').addEventListener('click', function() {
             requestReason: document.getElementById('requestReason').value
         };
 
+        // Handle file upload if a file is selected
+        let fileInput = document.getElementById('dataTemplate');
+        if (fileInput && fileInput.files.length > 0) {
+            let fileName = fileInput.files[0].name;
+            let userName = localStorage.getItem('userName') || 'user';
+            let newFileName = userName + '_template_' + fileName;
+            let filePath = 'uploads/templates/' + newFileName;
+            dataRequestInfo.templatePath = filePath;
+        }
+
         localStorage.setItem('dataRequestInfo', JSON.stringify(dataRequestInfo));
         window.location.href = 'attachments.php';
     }
 });
 
-// Handle Back Button
+// Function to determine the previous page based on the selected category
 document.getElementById('backBtn').addEventListener('click', function() {
-    window.location.href = 'previous_page.php'; // Update with actual previous page
+    let category = localStorage.getItem('selectedCategory');
+    let previousPage = 'personal_information.php';
+
+    switch (category) {
+        case 'taxagent':
+            previousPage = 'client.php';
+            break;
+        case 'taxpayer':
+            previousPage = 'personal_information.php';
+            break;
+        case 'student':
+        case 'researcher':
+            previousPage = 'institution_details.php';
+            break;
+        case 'public_company':
+        case 'private_company':
+            previousPage = 'org.php';
+            break;
+    }
+
+    window.location.href = previousPage;
 });
 
-// Clear localStorage when the form is submitted (optional)
-document.getElementById('dataRequestForm').addEventListener('submit', function() {
-    localStorage.removeItem('dataRequestInfo');
-});
+// Load saved data on page load
+document.addEventListener('DOMContentLoaded', loadDataRequestInfo);
 </script>
-
 
 
 <?php include 'footer.php'; ?>
