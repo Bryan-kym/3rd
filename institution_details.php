@@ -32,32 +32,58 @@
 </div>
 
 <script>
-// Enable 'Next' button when required fields are filled
+// Function to load saved institution details
+function loadInstitutionDetails() {
+    let insDetails = JSON.parse(localStorage.getItem('ins_details')) || {};
+
+    document.getElementById('inst_name').value = insDetails.inst_name || '';
+    document.getElementById('inst_email').value = insDetails.inst_email || '';
+    document.getElementById('inst_phone').value = insDetails.inst_phone || '';
+
+    checkFormCompletion(); // Ensure button state is updated after loading
+}
+
+// Enable 'Next' button when all required fields are filled
 const requiredFields = document.querySelectorAll('#institutionForm input[required]');
 const nextBtn = document.getElementById('nextBtn');
 
+function checkFormCompletion() {
+    let allFilled = Array.from(requiredFields).every(field => field.value.trim() !== '');
+    nextBtn.disabled = !allFilled;
+    return allFilled; // Ensures validation properly returns a boolean
+}
+
+// Attach input event listeners for validation
 requiredFields.forEach(field => {
     field.addEventListener('input', checkFormCompletion);
 });
 
-function checkFormCompletion() {
-    nextBtn.disabled = !Array.from(requiredFields).every(field => field.value.trim() !== '');
-}
-
-// Navigation to next or previous steps
+// Save institution details and move to the next page
 document.getElementById('nextBtn').addEventListener('click', function() {
-    // Store institution information in localStorage
-    localStorage.setItem('inst_name', document.getElementById('inst_name').value);
-    localStorage.setItem('inst_email', document.getElementById('inst_email').value);
-    localStorage.setItem('inst_phone', document.getElementById('inst_phone').value);
-    
-    // Redirect to Data Request Page
+    if (!checkFormCompletion()) {
+        alert("Please fill in all required fields before proceeding.");
+        return;
+    }
+
+    let insDetails = {
+        inst_name: document.getElementById('inst_name').value.trim(),
+        inst_email: document.getElementById('inst_email').value.trim(),
+        inst_phone: document.getElementById('inst_phone').value.trim()
+    };
+
+    localStorage.setItem('ins_details', JSON.stringify(insDetails));
+
     window.location.href = 'data_request.php'; // Redirect to data request page
 });
 
+// Back button navigation
 document.getElementById('backBtn').addEventListener('click', function() {
     window.location.href = 'personal_information.php'; // Redirect back to personal information page
 });
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', loadInstitutionDetails);
 </script>
+
 
 <?php include 'footer.php'; ?>

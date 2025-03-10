@@ -72,78 +72,88 @@
 <script>
     // Function to toggle fields based on selected option
     function toggleFields() {
-        const userType2 = document.getElementById('userType2').value;
-        const individualFields = document.getElementById('individualFields');
-        const organizationFields = document.getElementById('organizationFields');
-
-        if (userType2 === 'individual') {
-            individualFields.style.display = 'block';
-            organizationFields.style.display = 'none';
-        } else {
-            individualFields.style.display = 'none';
-            organizationFields.style.display = 'block';
-        }
+        const userType = document.getElementById('userType2').value;
+        document.getElementById('individualFields').style.display = userType === 'individual' ? 'block' : 'none';
+        document.getElementById('organizationFields').style.display = userType === 'organization' ? 'block' : 'none';
     }
 
-    // Check form completion based on selected user type
+    // Function to check if all required fields are filled
     function checkFormCompletion() {
-        const userType2 = document.getElementById('userType2').value;
-        const requiredFields = userType2 === 'individual' ?
-            document.querySelectorAll('#individualFields input[required]') :
-            document.querySelectorAll('#organizationFields input[required]');
-
-        // Enable "Next" button if all required fields in the selected section are filled
+        const userType = document.getElementById('userType2').value;
+        const requiredFields = document.querySelectorAll(`#${userType}Fields input[required]`);
         nextBtn.disabled = !Array.from(requiredFields).every(field => field.value.trim() !== '');
     }
 
-    // Event listeners for fields and user type selection
-    document.getElementById('userType2').addEventListener('change', function() {
-        localStorage.setItem('userType2', this.value);
-        toggleFields();
-        checkFormCompletion(); // Check form completion when user type changes
-    });
+    // Function to store data in localStorage
+    function saveClientInfo() {
+        const userType = document.getElementById('userType2').value;
+        let clientInfo = { userType };
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const userTypeSelect = document.getElementById('userType2');
-        const savedUserType = localStorage.getItem('userType2') || 'individual';
-        userTypeSelect.value = savedUserType;
+        if (userType === 'individual') {
+            clientInfo.surname = document.getElementById('surname').value;
+            clientInfo.othernames = document.getElementById('othernames').value;
+            clientInfo.email = document.getElementById('email').value;
+            clientInfo.phone = document.getElementById('phone').value;
+            clientInfo.kra_pin = document.getElementById('kra_pin').value;
+        } else {
+            clientInfo.orgName = document.getElementById('orgName').value;
+            clientInfo.orgPhone = document.getElementById('orgPhone').value;
+            clientInfo.orgEmail = document.getElementById('orgEmail').value;
+            clientInfo.orgKraPin = document.getElementById('orgKraPin').value;
+        }
+
+        localStorage.setItem('clientInfo', JSON.stringify(clientInfo));
+    }
+
+    // Function to load stored data into form fields
+    function loadClientInfo() {
+        const savedData = localStorage.getItem('clientInfo');
+        if (savedData) {
+            const clientInfo = JSON.parse(savedData);
+            document.getElementById('userType2').value = clientInfo.userType;
+            toggleFields();
+
+            if (clientInfo.userType === 'individual') {
+                document.getElementById('surname').value = clientInfo.surname || '';
+                document.getElementById('othernames').value = clientInfo.othernames || '';
+                document.getElementById('email').value = clientInfo.email || '';
+                document.getElementById('phone').value = clientInfo.phone || '';
+                document.getElementById('kra_pin').value = clientInfo.kra_pin || '';
+            } else {
+                document.getElementById('orgName').value = clientInfo.orgName || '';
+                document.getElementById('orgPhone').value = clientInfo.orgPhone || '';
+                document.getElementById('orgEmail').value = clientInfo.orgEmail || '';
+                document.getElementById('orgKraPin').value = clientInfo.orgKraPin || '';
+            }
+        }
+    }
+
+    // Event listeners
+    document.getElementById('userType2').addEventListener('change', () => {
         toggleFields();
         checkFormCompletion();
     });
 
-    // Add event listeners to required fields in both sections
-    const individualFields = document.querySelectorAll('#individualFields input[required]');
-    const organizationFields = document.querySelectorAll('#organizationFields input[required]');
+    document.addEventListener('DOMContentLoaded', () => {
+        loadClientInfo();
+        checkFormCompletion();
+    });
+
     const nextBtn = document.getElementById('nextBtn');
-
-    individualFields.forEach(field => field.addEventListener('input', checkFormCompletion));
-    organizationFields.forEach(field => field.addEventListener('input', checkFormCompletion));
-
-    // Handle navigation to next and previous steps
-    document.getElementById('nextBtn').addEventListener('click', function() {
-        const userTypeSelect = document.getElementById('userType2'); // Get the dropdown element directly
-        const userType = userTypeSelect.value; // Get the selected value
-        // Store values in localStorage for persistence
-        localStorage.setItem('orgName', document.getElementById('surname').value);
-        localStorage.setItem('orgNameta', document.getElementById('othernames').value);
-        localStorage.setItem('orgEmail', document.getElementById('email').value);
-        localStorage.setItem('orgPhone', document.getElementById('phone').value);
-        localStorage.setItem('orgKraPin', document.getElementById('kra_pin').value);
-
-        if (userTypeSelect.value === 'organization') {
-            localStorage.setItem('orgName', document.getElementById('orgName').value);
-            localStorage.setItem('orgPhone', document.getElementById('orgPhone').value);
-            localStorage.setItem('orgEmail', document.getElementById('orgEmail').value);
-            localStorage.setItem('orgKraPin', document.getElementById('orgKraPin').value);
-        }
-
-        // Redirect to next page
+    nextBtn.addEventListener('click', () => {
+        saveClientInfo();
         window.location.href = 'data_request.php';
     });
 
-    document.getElementById('backBtn').addEventListener('click', function() {
+    document.getElementById('backBtn').addEventListener('click', () => {
         window.location.href = 'taxagent.php';
     });
+
+    // Auto-check required fields
+    document.querySelectorAll('input[required]').forEach(field => {
+        field.addEventListener('input', checkFormCompletion);
+    });
 </script>
+
 
 <?php include 'footer.php'; ?>
