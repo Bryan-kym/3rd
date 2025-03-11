@@ -32,6 +32,7 @@
         </div>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function getStoredData(key) {
@@ -90,11 +91,15 @@ document.addEventListener('DOMContentLoaded', function() {
             method: "POST",
             body: formData
         })
-        .then(response => response.text())
+        .then(response => response.json())
         .then(data => {
-            alert("Submission successful!");
-            localStorage.clear();
-            window.location.href = "index.php";
+            if (data.success) {
+                alert("Submission successful!");
+                localStorage.clear();
+                window.location.href = "index.php";
+            } else {
+                alert("Error submitting data: " + data.error);
+            }
         })
         .catch(error => {
             alert("Error submitting data: " + error);
