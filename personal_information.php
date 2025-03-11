@@ -11,30 +11,38 @@ include 'header.php';
 
             <!-- Personal Information Form -->
             <form id="step3Form">
-                <div class="form-group">
-                    <label for="surname">Surname</label>
-                    <input type="text" class="form-control" id="surname" name="surname" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="othernames">Other Names</label>
-                    <input type="text" class="form-control" id="othernames" name="othernames" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" class="form-control" id="phone" name="phone" required>
-                </div>
-
-                <!-- KRA PIN (Hidden for Students) -->
                 <div class="form-group" id="kraPinField">
                     <label for="kra_pin">KRA PIN</label>
-                    <input type="text" class="form-control" id="kra_pin" name="kra_pin">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="kra_pin" name="kra_pin">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-primary" id="verifyKraPinBtn">Verify KRA PIN</button>
+                        </div>
+                    </div>
+                    <p id="kraPinError" class="text-danger"></p>
+                </div>
+
+                <!-- Wrap the rest of the form fields in a div -->
+                <div id="otherFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="surname">Surname</label>
+                        <input type="text" class="form-control" id="surname" name="surname" required disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="othernames">Other Names</label>
+                        <input type="text" class="form-control" id="othernames" name="othernames" required disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" required disabled>
+                    </div>
                 </div>
 
                 <!-- Navigation Buttons -->
@@ -110,6 +118,9 @@ include 'header.php';
         const category = localStorage.getItem('selectedCategory');
         if (category === 'student') {
             document.getElementById('kraPinField').style.display = 'none';
+            document.getElementById('otherFields').style.display = 'block';
+            const otherFields = document.querySelectorAll('#otherFields input');
+            otherFields.forEach(field => field.disabled = false);
         }
         loadFormData(); // Load previously saved data
     });
@@ -203,6 +214,49 @@ include 'header.php';
         saveFormData(); // Save input before navigating back
         window.location.href = 'options.php';
     });
+
+
+
+
+    document.getElementById('verifyKraPinBtn').addEventListener('click', function() {
+    const kraPin = document.getElementById('kra_pin').value;
+    const kraPinError = document.getElementById('kraPinError');
+
+    // Validate KRA PIN (basic check for empty input)
+    if (!kraPin) {
+        kraPinError.innerText = "Please enter a KRA PIN.";
+        return;
+    }
+
+    // Send KRA PIN to the server for validation
+    fetch('validate_kra_pin.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'kra_pin=' + encodeURIComponent(kraPin)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            kraPinError.innerText = ""; // Clear any previous error
+            document.getElementById('otherFields').style.display = 'block'; // Show other fields
+
+            // Enable all other fields
+            const otherFields = document.querySelectorAll('#otherFields input');
+            otherFields.forEach(field => field.disabled = false);
+
+            // Enable the 'Next' button if all required fields are filled
+            checkFormCompletion();
+        } else {
+            kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        kraPinError.innerText = "An error occurred. Please try again.";
+    });
+});
 </script>
 
 

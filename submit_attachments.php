@@ -7,12 +7,14 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL); //For debugging; remove for production
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    function sanitize($data) {
+    function sanitize($data)
+    {
         return htmlspecialchars(strip_tags(trim($data)));
     }
 
     $personalInfo = json_decode($_POST['personalInfo'], true);
     $dataRequestInfo = json_decode($_POST['dataRequestInfo'], true);
+    $ndaUpload = $_POST['ndaUpload'];
     $category = sanitize($_POST['category'] ?? '');
 
     $surname = sanitize($personalInfo['surname'] ?? '');
@@ -62,25 +64,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $year = date("y"); // Get last two digits of the current year (e.g., "25" for 2025)
         $result = $conn->query("SELECT MAX(CAST(SUBSTRING_INDEX(tracking_id, '/', -2) AS UNSIGNED)) AS last_number 
                                 FROM requests WHERE tracking_id LIKE 'KRA/CDO/%/$year'");
-    
+
         $lastNumber = ($result && $row = $result->fetch_assoc()) ? intval($row['last_number']) : 0;
         $newTrackingNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         $trackingID = "KRA/CDO/$newTrackingNumber/$year";
 
         $stmt2 = $conn->prepare("INSERT INTO requests (tracking_id ,requested_by, description, specific_fields, period_from, period_to, request_purpose, date_requested) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt2->bind_param("sisssss",$trackingID, $personalInfoId, $dataDescription, $specificFields, $dateFrom, $dateTo, $requestReason); // Adjust types as needed
+        $stmt2->bind_param("sisssss", $trackingID, $personalInfoId, $dataDescription, $specificFields, $dateFrom, $dateTo, $requestReason); // Adjust types as needed
         if (!$stmt2->execute()) {
             throw new Exception("Error inserting request: " . $stmt2->error);
         }
         $requestId = $stmt2->insert_id;
 
         foreach ($uploadedFiles as $filePath) {
-            $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path) VALUES (?, ?, ?)");
+            $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, last_edited_on) VALUES (?, ?, ?, NOW())");
             $stmt3->bind_param("iis", $requestId, $personalInfoId, $filePath);
             if (!$stmt3->execute()) {
                 throw new Exception("Error inserting document record: " . $stmt->error);
             }
         }
+
+        $stmt4 = $conn->prepare("UPDATE requestors_documents set request_id = ? , requester_id = ? where document_file_path = ?");
+        $stmt4->bind_param("iis", $requestId, $personalInfoId, $ndaUpload); // Adjust types as needed
+        if (!$stmt4->execute()) {
+            throw new Exception("Error inserting nda: " . $stmt4->error);
+        }
+
 
         $conn->commit();
         echo json_encode(["success" => true, "message" => "Data submitted successfully"]);
@@ -93,4 +102,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode(["success" => false, "error" => "Invalid request method."]);
 }
 $conn->close();
-?>
