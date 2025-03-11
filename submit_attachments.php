@@ -36,14 +36,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $uploadedFiles = [];
+    $attachmentNames = $_POST['attachment_names']; // Array of attachment names (req)
+    $attachmentTypes = $_POST['attachment_types']; // Array of file types
     foreach ($_FILES['attachments']['tmp_name'] as $index => $tmpName) {
         if ($_FILES['attachments']['error'][$index] === UPLOAD_ERR_OK) {
             $fileName = basename($_FILES['attachments']['name'][$index]);
             $uniqueFileName = time() . "_" . $fileName;
             $filePath = $uploadDir . $uniqueFileName;
-
+    
             if (move_uploaded_file($tmpName, $filePath)) {
-                $uploadedFiles[] = $filePath;
+                $uploadedFiles[] = [
+                    "path" => $filePath,
+                    "name" => $attachmentNames[$index], // Attach corresponding name
+                    "type" => $attachmentTypes[$index]  // Attach corresponding file type
+                ];
             } else {
                 echo json_encode(["success" => false, "error" => "File upload failed: " . $_FILES['attachments']['error'][$index]]);
                 exit();
@@ -76,11 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $requestId = $stmt2->insert_id;
 
-        foreach ($uploadedFiles as $filePath) {
-            $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, last_edited_on) VALUES (?, ?, ?, NOW())");
-            $stmt3->bind_param("iis", $requestId, $personalInfoId, $filePath);
+        foreach ($uploadedFiles as $file) {
+            $filePath = $file['path'];
+            $attachmentName = $file['name'];
+            $attachmentType = $file['type'];
+        
+            $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, last_edited_on, document_name, document_type) VALUES (?, ?, ?, NOW(), ?, ?)");
+            $stmt3->bind_param("iisss", $requestId, $personalInfoId, $filePath, $attachmentName, $attachmentType);
+        
             if (!$stmt3->execute()) {
-                throw new Exception("Error inserting document record: " . $stmt->error);
+                throw new Exception("Error inserting document record: " . $stmt3->error);
             }
         }
 
