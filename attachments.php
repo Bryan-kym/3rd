@@ -90,14 +90,16 @@
             let orgdetails = JSON.parse(localStorage.getItem("org_details") || "{}");
             let instdetails = JSON.parse(localStorage.getItem("inst_details") || "{}");
             let clientdetails = JSON.parse(localStorage.getItem("clientInfo") || "{}");
+            let ndaupload = localStorage.getItem("uploadedFilePath");
 
             formData.append("personalInfo", JSON.stringify(personalInfo));
             formData.append("dataRequestInfo", JSON.stringify(dataRequestInfo));
             formData.append("category", selectedCategory);
-            formData.append("taxagentdetails", JSON.stringify(taxAgentInfo))
+            formData.append("taxagentdetails", JSON.stringify(taxagentdetails))
             formData.append("orgdetails", JSON.stringify(orgdetails));
             formData.append("instdetails", JSON.stringify(instdetails));
-            formData.append("clientdetails", JSON.stringify(clientInfo));
+            formData.append("clientdetails", JSON.stringify(clientdetails));
+            formData.append("ndaUpload",ndaupload);
 
 
             document.querySelectorAll(".attachmentFile").forEach(input => {
