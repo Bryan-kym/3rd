@@ -28,3 +28,6 @@ $date_stamp = date("Y-m-d");
 $yesterday = date("Y-m-d", strtotime("$date_stamp -1 day"));
 $documents_file_path = $_SERVER['DOCUMENTS_FILE_PATH'];
 
+$uploadDir = $_SERVER['DOCUMENTS_UPLOAD_PATH'];
+$uploadpath = $_SERVER['DOCUMENTS_FILE_PATH'];
+

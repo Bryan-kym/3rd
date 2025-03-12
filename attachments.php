@@ -52,7 +52,7 @@
                     inputDiv.classList.add("form-group");
                     inputDiv.innerHTML = `
                     <label>${req} (PDF, JPG, PNG)</label>
-                    <input type="file" name="attachments[]" class="form-control attachmentFile" data-name="${req}" accept=".pdf,.jpg,.png" required>
+                    <input type="file" name="attachments[]" class="form-control attachmentFile" data-name="${req}" data-document-type="${req}" accept=".pdf,.jpg,.png" required>
                 `;
                     attachmentsContainer.appendChild(inputDiv);
                 });
@@ -83,6 +83,8 @@
 
             let formData = new FormData();
             let valid = true;
+            let errorMessage = document.getElementById("errorMessage");
+            errorMessage.textContent = ""; // Reset error message
 
             let personalInfo = JSON.parse(localStorage.getItem("personalInfo") || "{}");
             let dataRequestInfo = JSON.parse(localStorage.getItem("dataRequestInfo") || "{}");
@@ -95,19 +97,24 @@
             formData.append("personalInfo", JSON.stringify(personalInfo));
             formData.append("dataRequestInfo", JSON.stringify(dataRequestInfo));
             formData.append("category", selectedCategory);
-            formData.append("taxagentdetails", JSON.stringify(taxagentdetails))
+            formData.append("taxagentdetails", JSON.stringify(taxagentdetails));
             formData.append("orgdetails", JSON.stringify(orgdetails));
             formData.append("instdetails", JSON.stringify(instdetails));
             formData.append("clientdetails", JSON.stringify(clientdetails));
-            formData.append("ndaUpload",ndaupload);
-
+            formData.append("ndaUpload", ndaupload);
 
             document.querySelectorAll(".attachmentFile").forEach(input => {
-                if (!input.files[0]) {
+                let file = input.files[0];
+                if (!file) {
                     valid = false;
                     errorMessage.textContent = "All required files must be uploaded.";
                 } else {
-                    formData.append("attachments[]", input.files[0]);
+                    let attachmentName = input.getAttribute("data-name"); // Get the required attachment name
+                    let fileType = file.name.split('.').pop().toLowerCase(); // Extract file extension
+
+                    formData.append("attachments[]", file);
+                    formData.append("attachment_names[]", attachmentName); // Pass attachment name
+                    formData.append("attachment_types[]", fileType); // Pass attachment type
                 }
             });
 
@@ -132,6 +139,7 @@
                     errorMessage.textContent = "An unexpected error occurred. Check the console for details.";
                 });
         });
+
 
         document.getElementById("backBtn").addEventListener("click", function() {
             window.location.href = "data_request.php";

@@ -37,11 +37,13 @@ include 'header.php';
                     <div class="form-group">
                         <label for="email">Email</label>
                         <input type="email" class="form-control" id="email" name="email" required disabled>
+                        <small id="emailHelp" class="form-text text-muted">Please enter a valid email address.</small>
                     </div>
 
                     <div class="form-group">
                         <label for="phone">Phone Number</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" required disabled>
+                        <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" required disabled>
+                        <small id="phoneHelp" class="form-text text-muted">Please enter a 10-digit phone number.</small>
                     </div>
                 </div>
 
@@ -113,6 +115,51 @@ include 'header.php';
         }
     }
 
+    function validateEmail(email) {
+        const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        return regex.test(email);
+    }
+
+    document.getElementById('email').addEventListener('blur', function() {
+        const email = this.value;
+        const emailHelp = document.getElementById('emailHelp');
+
+        if (!validateEmail(email)) {
+            emailHelp.textContent = "Please enter a valid email address.";
+            emailHelp.classList.remove('text-muted');
+            emailHelp.classList.add('text-danger');
+            this.classList.add('is-invalid');
+        } else {
+            emailHelp.textContent = "Email address is valid.";
+            emailHelp.classList.remove('text-danger');
+            emailHelp.classList.add('text-success');
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    function validatePhone(phone) {
+        // Check if the phone number is exactly 10 digits and contains only numbers
+        const regex = /^\d{10}$/;
+        return regex.test(phone);
+    }
+
+    document.getElementById('phone').addEventListener('blur', function() {
+        const phone = this.value;
+        const phoneHelp = document.getElementById('phoneHelp');
+
+        if (!validatePhone(phone)) {
+            phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
+            phoneHelp.classList.remove('text-muted');
+            phoneHelp.classList.add('text-danger');
+            this.classList.add('is-invalid');
+        } else {
+            phoneHelp.textContent = "Phone number is valid.";
+            phoneHelp.classList.remove('text-danger');
+            phoneHelp.classList.add('text-success');
+            this.classList.remove('is-invalid');
+        }
+    });
+
     // Load data on page load
     document.addEventListener('DOMContentLoaded', function() {
         const category = localStorage.getItem('selectedCategory');
@@ -132,26 +179,67 @@ include 'header.php';
 
     // Save form data and send OTP when 'Next' is clicked
     document.getElementById('nextBtn').addEventListener('click', function() {
-        saveFormData(); // Ensure data is saved before proceeding
+    // Validate email and phone number
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+    const emailHelp = document.getElementById('emailHelp');
+    const phoneHelp = document.getElementById('phoneHelp');
 
-        let email = document.getElementById('email').value;
-        fetch('send_otp.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'email=' + encodeURIComponent(email)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    $('#otpModal').modal('show'); // Open OTP modal
-                } else {
-                    alert("Error sending OTP. Try again.");
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    });
+    let isValid = true;
+
+    // Validate email
+    if (!validateEmail(email)) {
+        emailHelp.textContent = "Please enter a valid email address.";
+        emailHelp.classList.remove('text-muted');
+        emailHelp.classList.add('text-danger');
+        document.getElementById('email').classList.add('is-invalid');
+        isValid = false;
+    } else {
+        emailHelp.textContent = "Email address is valid.";
+        emailHelp.classList.remove('text-danger');
+        emailHelp.classList.add('text-success');
+        document.getElementById('email').classList.remove('is-invalid');
+    }
+
+    // Validate phone number
+    if (!validatePhone(phone)) {
+        phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
+        phoneHelp.classList.remove('text-muted');
+        phoneHelp.classList.add('text-danger');
+        document.getElementById('phone').classList.add('is-invalid');
+        isValid = false;
+    } else {
+        phoneHelp.textContent = "Phone number is valid.";
+        phoneHelp.classList.remove('text-danger');
+        phoneHelp.classList.add('text-success');
+        document.getElementById('phone').classList.remove('is-invalid');
+    }
+
+    // If email or phone is invalid, stop further execution
+    if (!isValid) {
+        return;
+    }
+
+    // Save form data and proceed with OTP request
+    saveFormData(); // Ensure data is saved before proceeding
+
+    fetch('send_otp.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'email=' + encodeURIComponent(email)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            $('#otpModal').modal('show'); // Open OTP modal
+        } else {
+            alert("Error sending OTP. Try again.");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
 
     // OTP Verification
     document.getElementById('verifyOtpBtn').addEventListener('click', function() {
@@ -219,44 +307,44 @@ include 'header.php';
 
 
     document.getElementById('verifyKraPinBtn').addEventListener('click', function() {
-    const kraPin = document.getElementById('kra_pin').value;
-    const kraPinError = document.getElementById('kraPinError');
+        const kraPin = document.getElementById('kra_pin').value;
+        const kraPinError = document.getElementById('kraPinError');
 
-    // Validate KRA PIN (basic check for empty input)
-    if (!kraPin) {
-        kraPinError.innerText = "Please enter a KRA PIN.";
-        return;
-    }
-
-    // Send KRA PIN to the server for validation
-    fetch('validate_kra_pin.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'kra_pin=' + encodeURIComponent(kraPin)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === "success") {
-            kraPinError.innerText = ""; // Clear any previous error
-            document.getElementById('otherFields').style.display = 'block'; // Show other fields
-
-            // Enable all other fields
-            const otherFields = document.querySelectorAll('#otherFields input');
-            otherFields.forEach(field => field.disabled = false);
-
-            // Enable the 'Next' button if all required fields are filled
-            checkFormCompletion();
-        } else {
-            kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
+        // Validate KRA PIN (basic check for empty input)
+        if (!kraPin) {
+            kraPinError.innerText = "Please enter a KRA PIN.";
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        kraPinError.innerText = "An error occurred. Please try again.";
+
+        // Send KRA PIN to the server for validation
+        fetch('validate_kra_pin.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'kra_pin=' + encodeURIComponent(kraPin)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    kraPinError.innerText = ""; // Clear any previous error
+                    document.getElementById('otherFields').style.display = 'block'; // Show other fields
+
+                    // Enable all other fields
+                    const otherFields = document.querySelectorAll('#otherFields input');
+                    otherFields.forEach(field => field.disabled = false);
+
+                    // Enable the 'Next' button if all required fields are filled
+                    checkFormCompletion();
+                } else {
+                    kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                kraPinError.innerText = "An error occurred. Please try again.";
+            });
     });
-});
 </script>
 
 
