@@ -6,7 +6,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 // Get the KRA PIN from the POST request
-$kraPin = $_POST['kra_pin'];
+$kraPin = $_POST['orgKraPin'];
 
 // SOAP request URL
 $soapUrl  = $_SERVER['PINCHECKER_URL'];
