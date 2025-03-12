@@ -16,7 +16,7 @@ include 'header.php';
                     <div class="input-group">
                         <input type="text" class="form-control" id="kra_pin" name="kra_pin">
                         <div class="input-group-append">
-                            <button type="button" class="btn btn-primary" id="verifyKraPinBtn">Verify KRA PIN</button>
+                            <button type="button" class="btn btn-primary" id="verifyKraPinBtn">Verify</button>
                         </div>
                     </div>
                     <p id="kraPinError" class="text-danger"></p>

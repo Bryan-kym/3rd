@@ -272,8 +272,8 @@
             case 'researcher':
                 previousPage = 'institution_details.php';
                 break;
-            case 'public_company':
-            case 'private_company':
+            case 'publiccompany':
+            case 'privatecompany':
                 previousPage = 'org.php';
                 break;
         }
