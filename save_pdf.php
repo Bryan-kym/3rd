@@ -14,11 +14,11 @@ if (isset($data['pdf']) && isset($data['name'])) {
     $name = $data['name'];    // User's name as the signature
     $file_dbname = 'NDA form';
     $filetype = 'application/pdf';
-
+    $uploadpath = $_SERVER['DOCUMENTS_UPLOAD_PATH'];
     // Generate a unique name once
     $uniqueName = uniqid('nda_'); // e.g. nda_5f2b9c7a9d2e1
     // Path to save the PDF file
-    $filePath = 'uploads/' . $uniqueName . '.pdf';
+    $filePath = $uploadpath. $uniqueName . '.pdf';
     $filePathdb = $documents_file_path . $uniqueName . '.pdf';
 
     // Decode the Base64 data and save the PDF to the server

@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     {
         return htmlspecialchars(strip_tags(trim($data)));
     }
-
+    $upldFilePth = $_SERVER['DOCUMENT_COMP_PATH'];
     $personalInfo = json_decode($_POST['personalInfo'], true);
     $dataRequestInfo = json_decode($_POST['dataRequestInfo'], true);
     $ndaUpload = $_POST['ndaUpload'];
@@ -24,11 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
     $kraPin = isset($personalInfo['kra_pin']) ? (int)$personalInfo['kra_pin'] : null;
 
+
     $dataDescription = sanitize($dataRequestInfo['dataDescription'] ?? '');
     $specificFields = sanitize($dataRequestInfo['specificFields'] ?? '');
     $dateFrom = isset($dataRequestInfo['dateFrom']) ? date('Y-m-d', strtotime($dataRequestInfo['dateFrom'])) : null;
     $dateTo = isset($dataRequestInfo['dateTo']) ? date('Y-m-d', strtotime($dataRequestInfo['dateTo'])) : null;
     $requestReason = sanitize($dataRequestInfo['requestReason'] ?? '');
+    $templateUpload = sanitize($dataRequestInfo['templatePath'] ?? '');
+    $compTemplateUlp = $upldFilePth . $templateUpload;
+    $templateFileType = sanitize($dataRequestInfo['templateFileType'] ?? '');
 
     $uploadDir = "uploads/";
     if (!is_dir($uploadDir)) {
@@ -43,6 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fileName = basename($_FILES['attachments']['name'][$index]);
             $uniqueFileName = time() . "_" . $fileName;
             $filePath = $uploadDir . $uniqueFileName;
+            
+            $compFIlePath = $upldFilePth . $filePath;
     
             if (move_uploaded_file($tmpName, $filePath)) {
                 $uploadedFiles[] = [
@@ -88,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $attachmentType = $file['type'];
         
             $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, last_edited_on, document_name, document_type) VALUES (?, ?, ?, NOW(), ?, ?)");
-            $stmt3->bind_param("iisss", $requestId, $personalInfoId, $filePath, $attachmentName, $attachmentType);
+            $stmt3->bind_param("iisss", $requestId, $personalInfoId, $compFIlePath, $attachmentName, $attachmentType);
         
             if (!$stmt3->execute()) {
                 throw new Exception("Error inserting document record: " . $stmt3->error);
@@ -99,6 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt4->bind_param("iis", $requestId, $personalInfoId, $ndaUpload); // Adjust types as needed
         if (!$stmt4->execute()) {
             throw new Exception("Error inserting nda: " . $stmt4->error);
+        }
+
+        $stmt5 = $conn->prepare("INSERT INTO requestors_documents (document_name, document_type, document_file_path, request_id, requester_id, last_edited_on) VALUES ('Supporting document', ?, ?, ?, ?, NOW())");
+        $stmt5->bind_param("ssss",$templateFileType, $compTemplateUlp, $requestId, $personalInfoId); // Adjust types as needed
+        if (!$stmt5->execute()) {
+            throw new Exception("Error inserting template: " . $stmt5->error);
         }
 
 
