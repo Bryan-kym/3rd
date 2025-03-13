@@ -16,13 +16,182 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dataRequestInfo = json_decode($_POST['dataRequestInfo'], true);
     $ndaUpload = $_POST['ndaUpload'];
     $category = sanitize($_POST['category'] ?? '');
+    $clientdetails = json_decode($_POST['clientdetails'], true);
+    $instdetails = json_decode($_POST['instdetails'], true);
+    $orgdetails = json_decode($_POST['orgdetails'], true);
+    $taxagentdetails = json_decode($_POST['taxagentdetails'], true);
 
-    $surname = sanitize($personalInfo['surname'] ?? '');
-    $otherNames = sanitize($personalInfo['othernames'] ?? '');
-    $names = trim("$surname $otherNames");
-    $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
-    $kraPin = isset($personalInfo['kra_pin']) ? (int)$personalInfo['kra_pin'] : null;
+    // Initialize default values
+    $surname = '';
+    $otherNames = '';
+    $names = '';
+    $email = '';
+    $phoneNumber = '';
+    $kraPin = '';
+    $cnames = '';
+    $cemail = '';
+    $cphoneNumber = '';
+    $ckraPin = '';
+    $clientType = '';
+    $taxAgentType = '';
+
+    switch ($category) {
+        case 'taxpayer':
+            $surname = sanitize($personalInfo['surname'] ?? '');
+            $otherNames = sanitize($personalInfo['othernames'] ?? '');
+            $names = trim("$surname $otherNames");
+            $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+            $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
+            $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
+            break;
+
+        case 'taxagent':
+            $taxAgentType = sanitize($taxagentdetails['userType'] ?? '');
+            if ($taxAgentType == 'individual') {
+                $surname = sanitize($taxagentdetails['surname'] ?? '');
+                $otherNames = sanitize($taxagentdetails['othernames'] ?? '');
+                $names = trim("$surname $otherNames");
+                $email = filter_var($taxagentdetails['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+                $phoneNumber = preg_replace('/[^0-9]/', '', $taxagentdetails['phone'] ?? '');
+                $kraPin = sanitize($taxagentdetails['kra_pin'] ?? '');
+            } else {
+                $names = sanitize($taxagentdetails['orgName'] ?? '');
+                $email = filter_var($taxagentdetails['orgEmail'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+                $phoneNumber = preg_replace('/[^0-9]/', '', $taxagentdetails['orgPhone'] ?? '');
+                $kraPin = sanitize($taxagentdetails['orgKraPin'] ?? '');
+            }
+
+            $clientType = sanitize($clientdetails['userType'] ?? '');
+            if ($clientType == 'individual') {
+                $surname = sanitize($clientdetails['surname'] ?? '');
+                $otherNames = sanitize($clientdetails['othernames'] ?? '');
+                $cnames = trim("$surname $otherNames");
+                $cemail = filter_var($clientdetails['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+                $cphoneNumber = preg_replace('/[^0-9]/', '', $clientdetails['phone'] ?? '');
+                $ckraPin = sanitize($clientdetails['kra_pin'] ?? '');
+            } else {
+                $cnames = sanitize($clientdetails['orgName'] ?? '');
+                $cemail = filter_var($clientdetails['orgEmail'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+                $cphoneNumber = preg_replace('/[^0-9]/', '', $clientdetails['orgPhone'] ?? '');
+                $ckraPin = sanitize($clientdetails['orgKraPin'] ?? '');
+            }
+            break;
+
+        case 'student':
+        case 'researcher':
+            $surname = sanitize($personalInfo['surname'] ?? '');
+            $otherNames = sanitize($personalInfo['othernames'] ?? '');
+            $names = trim("$surname $otherNames");
+            $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+            $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
+            $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
+            $cnames = sanitize($instdetails['inst_name'] ?? '');
+            $cemail = filter_var($instdetails['inst_email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+            $cphoneNumber = preg_replace('/[^0-9]/', '', $instdetails['inst_phone'] ?? '');
+            break;
+        case 'privatecompany':
+        case 'publiccompany':
+            $surname = sanitize($personalInfo['surname'] ?? '');
+            $otherNames = sanitize($personalInfo['othernames'] ?? '');
+            $names = trim("$surname $otherNames");
+            $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+            $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
+            $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
+            $cnames = sanitize($orgdetails['orgName'] ?? '');
+            $cemail = filter_var($orgdetails['orgEmail'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+            $cphoneNumber = preg_replace('/[^0-9]/', '', $orgdetails['orgPhone'] ?? '');
+            $ckraPin = sanitize($orgdetails['orgKraPin'] ?? '');
+            break;
+        default:
+            // Handle unknown category
+            break;
+    }
+
+    // Now you can use the variables:
+    // $names, $email, $phoneNumber, $kraPin, $cnames, $cemail, $cphoneNumber, $ckraPin, $clientType, $taxAgentType
+    // if ($category == 'taxpayer') {
+    //     $surname = sanitize($personalInfo['surname'] ?? '');
+    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
+    //     $names = trim("$surname $otherNames");
+    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
+    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
+    //     $cnames = '';
+    //     $cemail = '';
+    //     $cphoneNumber = '';
+    //     $ckraPin = '';
+    //     $clientType = '';
+    //     $taxAgentType = '';
+    // } elseif ($category == 'taxagent') {
+    //     $taxAgentType = sanitize($taxagentdetails['userType'] ?? '');
+    //     if ($taxAgentType == 'individual') {
+    //         $surname = sanitize($taxagentdetails['surname'] ?? '');
+    //         $otherNames = sanitize($taxagentdetails['othernames'] ?? '');
+    //         $names = trim("$surname $otherNames");
+    //         $email = filter_var($taxagentdetails['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //         $phoneNumber = preg_replace('/[^0-9]/', '', $taxagentdetails['phone'] ?? '');
+    //         $kraPin = sanitize($taxagentdetails['kra_pin'] ?? '');
+    //     } else {
+    //         $names = sanitize($taxagentdetails['orgName'] ?? '');
+    //         $email = filter_var($taxagentdetails['orgEmail'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //         $phoneNumber = preg_replace('/[^0-9]/', '', $taxagentdetails['orgPhone'] ?? '');
+    //         $kraPin = sanitize($taxagentdetails['orgKraPin'] ?? '');
+    //     }
+    //     $clientType = sanitize($clientdetails['userType'] ?? '');
+    //     if ($clientType == 'individual') {
+    //         $surname = sanitize($clientdetails['surname'] ?? '');
+    //         $otherNames = sanitize($clientdetails['othernames'] ?? '');
+    //         $cnames = trim("$surname $otherNames");
+    //         $cemail = filter_var($clientdetails['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //         $cphoneNumber = preg_replace('/[^0-9]/', '', $clientdetails['phone'] ?? '');
+    //         $ckraPin = sanitize($clientdetails['kra_pin'] ?? '');
+    //     } else {
+    //         $cnames = sanitize($clientdetails['orgName'] ?? '');
+    //         $cemail = filter_var($clientdetails['orgEmail'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //         $cphoneNumber = preg_replace('/[^0-9]/', '', $clientdetails['orgPhone'] ?? '');
+    //         $ckraPin = sanitize($clientdetails['orgKraPin'] ?? '');
+    //     }
+    // } elseif ($category == 'student') {
+    //     $surname = sanitize($personalInfo['surname'] ?? '');
+    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
+    //     $names = trim("$surname $otherNames");
+    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
+    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
+    //     $cnames = sanitize($instdetails['inst_name'] ?? '');
+    //     $cemail = filter_var($instdetails['inst_email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //     $cphoneNumber = preg_replace('/[^0-9]/', '', $instdetails['inst_phone'] ?? '');
+    //     $ckraPin = '';
+    //     $clientType = '';
+    //     $taxAgentType = '';
+    // } elseif ($category == 'researcher') {
+    //     $surname = sanitize($personalInfo['surname'] ?? '');
+    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
+    //     $names = trim("$surname $otherNames");
+    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
+    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
+    //     $cnames = sanitize($instdetails['inst_name'] ?? '');
+    //     $cemail = filter_var($instdetails['inst_email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //     $cphoneNumber = preg_replace('/[^0-9]/', '', $instdetails['inst_phone'] ?? '');
+    //     $ckraPin = '';
+    //     $clientType = '';
+    //     $taxAgentType = '';
+    // } elseif ($category == 'privatecompany') {
+    //     $surname = sanitize($personalInfo['surname'] ?? '');
+    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
+    //     $names = trim("$surname $otherNames");
+    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
+    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
+    //     $cnames = sanitize($instdetails['inst_name'] ?? '');
+    //     $cemail = filter_var($instdetails['inst_email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
+    //     $cphoneNumber = preg_replace('/[^0-9]/', '', $instdetails['inst_phone'] ?? '');
+    //     $ckraPin = '';
+    //     $clientType = '';
+    //     $taxAgentType = '';
+    // }
+
 
 
     $dataDescription = sanitize($dataRequestInfo['dataDescription'] ?? '');
@@ -47,9 +216,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fileName = basename($_FILES['attachments']['name'][$index]);
             $uniqueFileName = time() . "_" . $fileName;
             $filePath = $uploadDir . $uniqueFileName;
-            
+
             $compFIlePath = $upldFilePth . $filePath;
-    
+
             if (move_uploaded_file($tmpName, $filePath)) {
                 $uploadedFiles[] = [
                     "path" => $filePath,
@@ -66,8 +235,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $conn->begin_transaction();
     try {
-        $stmt = $conn->prepare("INSERT INTO requestors (fullnames, phone_number, email, requester_type, kra_pin) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sisss", $names, $phoneNumber, $email, $category, $kraPin); // Adjust types as needed
+        $stmt = $conn->prepare("INSERT INTO requestors (fullnames, phone_number, email, requester_type, kra_pin, taxagent_type, client_type, 
+        requester_affiliation_name, requester_affiliation_phone, requester_affiliation_email, requester_affiliation_pin) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sisssssssss", $names, $phoneNumber, $email, $category, $kraPin, $taxAgentType, $clientType, $cnames, $cphoneNumber, $cemail, $ckraPin); // Adjust types as needed
         if (!$stmt->execute()) {
             throw new Exception("Error inserting requestor: " . $stmt->error);
         }
@@ -92,10 +263,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filePath = $file['path'];
             $attachmentName = $file['name'];
             $attachmentType = $file['type'];
-        
+
             $stmt3 = $conn->prepare("INSERT INTO requestors_documents (request_id, requester_id, document_file_path, last_edited_on, document_name, document_type) VALUES (?, ?, ?, NOW(), ?, ?)");
             $stmt3->bind_param("iisss", $requestId, $personalInfoId, $compFIlePath, $attachmentName, $attachmentType);
-        
+
             if (!$stmt3->execute()) {
                 throw new Exception("Error inserting document record: " . $stmt3->error);
             }
@@ -108,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $stmt5 = $conn->prepare("INSERT INTO requestors_documents (document_name, document_type, document_file_path, request_id, requester_id, last_edited_on) VALUES ('Supporting document', ?, ?, ?, ?, NOW())");
-        $stmt5->bind_param("ssss",$templateFileType, $compTemplateUlp, $requestId, $personalInfoId); // Adjust types as needed
+        $stmt5->bind_param("ssss", $templateFileType, $compTemplateUlp, $requestId, $personalInfoId); // Adjust types as needed
         if (!$stmt5->execute()) {
             throw new Exception("Error inserting template: " . $stmt5->error);
         }
