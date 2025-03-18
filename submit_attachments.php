@@ -107,92 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
     }
 
-    // Now you can use the variables:
-    // $names, $email, $phoneNumber, $kraPin, $cnames, $cemail, $cphoneNumber, $ckraPin, $clientType, $taxAgentType
-    // if ($category == 'taxpayer') {
-    //     $surname = sanitize($personalInfo['surname'] ?? '');
-    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
-    //     $names = trim("$surname $otherNames");
-    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
-    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
-    //     $cnames = '';
-    //     $cemail = '';
-    //     $cphoneNumber = '';
-    //     $ckraPin = '';
-    //     $clientType = '';
-    //     $taxAgentType = '';
-    // } elseif ($category == 'taxagent') {
-    //     $taxAgentType = sanitize($taxagentdetails['userType'] ?? '');
-    //     if ($taxAgentType == 'individual') {
-    //         $surname = sanitize($taxagentdetails['surname'] ?? '');
-    //         $otherNames = sanitize($taxagentdetails['othernames'] ?? '');
-    //         $names = trim("$surname $otherNames");
-    //         $email = filter_var($taxagentdetails['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //         $phoneNumber = preg_replace('/[^0-9]/', '', $taxagentdetails['phone'] ?? '');
-    //         $kraPin = sanitize($taxagentdetails['kra_pin'] ?? '');
-    //     } else {
-    //         $names = sanitize($taxagentdetails['orgName'] ?? '');
-    //         $email = filter_var($taxagentdetails['orgEmail'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //         $phoneNumber = preg_replace('/[^0-9]/', '', $taxagentdetails['orgPhone'] ?? '');
-    //         $kraPin = sanitize($taxagentdetails['orgKraPin'] ?? '');
-    //     }
-    //     $clientType = sanitize($clientdetails['userType'] ?? '');
-    //     if ($clientType == 'individual') {
-    //         $surname = sanitize($clientdetails['surname'] ?? '');
-    //         $otherNames = sanitize($clientdetails['othernames'] ?? '');
-    //         $cnames = trim("$surname $otherNames");
-    //         $cemail = filter_var($clientdetails['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //         $cphoneNumber = preg_replace('/[^0-9]/', '', $clientdetails['phone'] ?? '');
-    //         $ckraPin = sanitize($clientdetails['kra_pin'] ?? '');
-    //     } else {
-    //         $cnames = sanitize($clientdetails['orgName'] ?? '');
-    //         $cemail = filter_var($clientdetails['orgEmail'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //         $cphoneNumber = preg_replace('/[^0-9]/', '', $clientdetails['orgPhone'] ?? '');
-    //         $ckraPin = sanitize($clientdetails['orgKraPin'] ?? '');
-    //     }
-    // } elseif ($category == 'student') {
-    //     $surname = sanitize($personalInfo['surname'] ?? '');
-    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
-    //     $names = trim("$surname $otherNames");
-    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
-    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
-    //     $cnames = sanitize($instdetails['inst_name'] ?? '');
-    //     $cemail = filter_var($instdetails['inst_email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //     $cphoneNumber = preg_replace('/[^0-9]/', '', $instdetails['inst_phone'] ?? '');
-    //     $ckraPin = '';
-    //     $clientType = '';
-    //     $taxAgentType = '';
-    // } elseif ($category == 'researcher') {
-    //     $surname = sanitize($personalInfo['surname'] ?? '');
-    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
-    //     $names = trim("$surname $otherNames");
-    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
-    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
-    //     $cnames = sanitize($instdetails['inst_name'] ?? '');
-    //     $cemail = filter_var($instdetails['inst_email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //     $cphoneNumber = preg_replace('/[^0-9]/', '', $instdetails['inst_phone'] ?? '');
-    //     $ckraPin = '';
-    //     $clientType = '';
-    //     $taxAgentType = '';
-    // } elseif ($category == 'privatecompany') {
-    //     $surname = sanitize($personalInfo['surname'] ?? '');
-    //     $otherNames = sanitize($personalInfo['othernames'] ?? '');
-    //     $names = trim("$surname $otherNames");
-    //     $email = filter_var($personalInfo['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //     $phoneNumber = preg_replace('/[^0-9]/', '', $personalInfo['phone'] ?? '');
-    //     $kraPin = sanitize($personalInfo['kra_pin'] ?? '');
-    //     $cnames = sanitize($instdetails['inst_name'] ?? '');
-    //     $cemail = filter_var($instdetails['inst_email'] ?? '', FILTER_VALIDATE_EMAIL) ?: '';
-    //     $cphoneNumber = preg_replace('/[^0-9]/', '', $instdetails['inst_phone'] ?? '');
-    //     $ckraPin = '';
-    //     $clientType = '';
-    //     $taxAgentType = '';
-    // }
-
-
 
     $dataDescription = sanitize($dataRequestInfo['dataDescription'] ?? '');
     $specificFields = sanitize($dataRequestInfo['specificFields'] ?? '');
@@ -252,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newTrackingNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         $trackingID = "KRA/CDO/$newTrackingNumber/$year";
 
-        $stmt2 = $conn->prepare("INSERT INTO requests (tracking_id ,requested_by, description, specific_fields, period_from, period_to, request_purpose, date_requested) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt2 = $conn->prepare("INSERT INTO requests (tracking_id ,requested_by, description, specific_fields, period_from, period_to, request_purpose, date_requested, date_requested_dt) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
         $stmt2->bind_param("sisssss", $trackingID, $personalInfoId, $dataDescription, $specificFields, $dateFrom, $dateTo, $requestReason); // Adjust types as needed
         if (!$stmt2->execute()) {
             throw new Exception("Error inserting request: " . $stmt2->error);
