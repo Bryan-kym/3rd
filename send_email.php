@@ -4,6 +4,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 require_once "vendor/autoload.php";
 
+$mail_sender = $_SERVER['MAIL_SENDER'];
 $emailSentStatus = '';
 
 //connect to php mailer
@@ -18,7 +19,7 @@ $mail->SMTPSecure = "ssl";
 $mail->Port = 25;
 $mail->isHTML(true);
 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-$mail->setfrom('noreply@kra.go.ke', "Third-party");
+$mail->setfrom($mail_sender, "Third-party");
 
 $mail->smtpConnect(
     array(

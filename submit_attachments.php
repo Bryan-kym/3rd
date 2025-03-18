@@ -197,6 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$stmt5->execute()) {
             throw new Exception("Error inserting template: " . $stmt5->error);
         }
+        
 
 
         $conn->commit();
@@ -209,4 +210,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     echo json_encode(["success" => false, "error" => "Invalid request method."]);
 }
+include 'mail_reviewers.php';
 $conn->close();
+
