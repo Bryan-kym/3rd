@@ -90,7 +90,7 @@
             let dataRequestInfo = JSON.parse(localStorage.getItem("dataRequestInfo") || "{}");
             let taxagentdetails = JSON.parse(localStorage.getItem("taxAgentInfo") || "{}");
             let orgdetails = JSON.parse(localStorage.getItem("org_details") || "{}");
-            let instdetails = JSON.parse(localStorage.getItem("inst_details") || "{}");
+            let instdetails = JSON.parse(localStorage.getItem("ins_details") || "{}");
             let clientdetails = JSON.parse(localStorage.getItem("clientInfo") || "{}");
             let ndaupload = localStorage.getItem("uploadedFilePath");
 
