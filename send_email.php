@@ -18,7 +18,7 @@ $mail->SMTPSecure = "ssl";
 $mail->Port = 25;
 $mail->isHTML(true);
 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-$mail->setfrom('brian.kirui@kra.go.ke', "Third-party");
+$mail->setfrom('noreply@kra.go.ke', "Third-party");
 
 $mail->smtpConnect(
     array(
