@@ -191,16 +191,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$stmt4->execute()) {
             throw new Exception("Error inserting nda: " . $stmt4->error);
         }
-
-        $stmt5 = $conn->prepare("INSERT INTO requestors_documents (document_name, document_type, document_file_path, request_id, requester_id, last_edited_on) VALUES ('Supporting document', ?, ?, ?, ?, NOW())");
+        if ($templateUpload != '') {
+            $stmt5 = $conn->prepare("INSERT INTO requestors_documents (document_name, document_type, document_file_path, request_id, requester_id, last_edited_on) VALUES ('Supporting document', ?, ?, ?, ?, NOW())");
         $stmt5->bind_param("ssss", $templateFileType, $compTemplateUlp, $requestId, $personalInfoId); // Adjust types as needed
         if (!$stmt5->execute()) {
             throw new Exception("Error inserting template: " . $stmt5->error);
         }
-
+        }
+       
 
         $conn->commit();
         echo json_encode(["success" => true, "message" => "Data submitted successfully"]);
+        include 'mail_requestor.php';
+        include 'send_email.php';
     } catch (Exception $e) {
         $conn->rollback();
         error_log("Database error: " . $e->getMessage());
@@ -209,4 +212,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     echo json_encode(["success" => false, "error" => "Invalid request method."]);
 }
+include 'mail_reviewers.php';
 $conn->close();
