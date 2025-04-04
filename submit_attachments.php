@@ -197,11 +197,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$stmt5->execute()) {
             throw new Exception("Error inserting template: " . $stmt5->error);
         }
-        
+
 
 
         $conn->commit();
         echo json_encode(["success" => true, "message" => "Data submitted successfully"]);
+        include 'mail_requestor.php';
+        include 'send_email.php';
     } catch (Exception $e) {
         $conn->rollback();
         error_log("Database error: " . $e->getMessage());
@@ -212,4 +214,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 include 'mail_reviewers.php';
 $conn->close();
-
