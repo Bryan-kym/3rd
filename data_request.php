@@ -1,7 +1,7 @@
 <?php include 'header.php'; ?>
 <?php include 'config.php'; ?>
 
-<div class="container mt-5">
+<div class="container mt-5 w-75">
     <div class="card">
         <div class="card-body">
             <h3 class="card-title">Data Request</h3>
@@ -214,7 +214,9 @@
 
             // Handle file upload if a file is selected
             let fileInput = document.getElementById('dataTemplate');
-            if (fileInput && fileInput.files.length > 0) {
+            console.log("File input:", fileInput.files); // Log the file input element
+            console.log("File input value:", fileInput.value); // Log the file input value
+            if ((fileInput && fileInput.files.length > 0) && fileInput.files[0].size > 0) {
                 let formData = new FormData();
                 formData.append('file', fileInput.files[0]);
 
