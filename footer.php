@@ -1,3 +1,4 @@
+
 <!-- footer.php -->
 <div class="footer mt-5">
     <p>&copy; <?php echo date("Y"); ?> Kenya Revenue Authority  |

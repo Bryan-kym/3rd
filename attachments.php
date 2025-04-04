@@ -34,8 +34,8 @@
         let errorMessage = document.getElementById("errorMessage");
 
         const attachmentRequirements = {
-            "student": ["NACORSTI Permit", "Letter of Introduction"],
-            "researcher": ["NACORSTI Permit", "Letter of Introduction"],
+            "student": ["NACOSTI Permit", "Letter of Introduction"],
+            "researcher": ["NACOSTI Permit", "Letter of Introduction"],
             "taxpayer": ["ID", "PIN Certificate"],
             "taxagent": ["Approved Consent Letter"],
             "publiccompany": ["Request Letter from Authorized Signatory"],
