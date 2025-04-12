@@ -55,13 +55,13 @@ try {
     $_SESSION['otp_verification_user'] = $user['id'];
     $_SESSION['otp_created_at'] = time();
 
-    // // Send OTP email
+    // Send OTP email
     $subject_ = "Your Login Verification Code";
     $message_ = "Your verification code is: $otp\n\nThis code will expire in 10 minutes.";
     $recipientemail_ = $user['email'];
     require_once '../send_email.php';
 
-    if (strpos($emailSentStatus, 'success') === true) {
+    if (strpos($emailSentStatus, 'success') === false) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Failed to send OTP email']);
         exit;

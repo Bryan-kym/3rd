@@ -1,6 +1,22 @@
-<?php include 'header.php'; ?>
+<?php
+include 'header.php'; 
+require_once 'auth.php'; // Include your authentication functions
 
-<div class="container mt-5">
+// Check if user is authenticated
+try {
+    $userId = authenticate(); // This will redirect if not authenticated
+    
+    // Get token from session or headers
+    $token = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : 
+             (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : '');
+} catch (Exception $e) {
+    // Redirect to login if not authenticated
+    header('Location: login.html?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    exit;
+}
+?>
+
+<div class="container mt-5 w-50">
     <div class="card">
         <div class="card-body">
             <h3 class="card-title">Tax Agent Information</h3>
@@ -50,7 +66,6 @@
                             <small id="phoneHelp" class="form-text text-muted">Please enter a 10-digit phone number.</small>
                         </div>
                     </div>
-
                 </div>
 
                 <!-- Fields for Organization (Hidden initially) -->
@@ -112,351 +127,385 @@
     </div>
 </div>
 
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('verifyPinBtn').addEventListener('click', function() {
-            const kraPin = document.getElementById('kra_pin').value;
-            const kraPinError = document.getElementById('kraPinError');
+// Store token in localStorage if it came from session
+const token = '<?php echo $token; ?>';
+if (token && !localStorage.getItem('authToken')) {
+    localStorage.setItem('authToken', token);
+}
 
-            // Validate KRA PIN (basic check for empty input)
-            if (!kraPin) {
-                kraPinError.innerText = "Please enter a KRA PIN.";
-                return;
-            }
+// Check if coming from proper flow by verifying required localStorage items
+window.addEventListener('load', async function() {
+    // Check for auth token and required flow items
+    if (!localStorage.getItem('authToken') || 
+        !localStorage.getItem('nda_form') || 
+        !localStorage.getItem('selectedCategory') ||
+        localStorage.getItem('selectedCategory') !== 'taxagent') {
+        window.location.href = 'dashboard.php';
+        return;
+    }
 
-            // Send KRA PIN to the server for validation
-            fetch('validate_kra_pin.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'kra_pin=' + encodeURIComponent(kraPin)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        kraPinError.innerText = ""; // Clear any previous error
-                        document.getElementById('otherFields').style.display = 'block'; // Show other fields
-
-                        // Enable all other fields
-                        const otherFields = document.querySelectorAll('#otherFields input');
-                        otherFields.forEach(field => field.disabled = false);
-
-                        // Enable the 'Next' button if all required fields are filled
-                        checkFormCompletion();
-                    } else {
-                        kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    kraPinError.innerText = "An error occurred. Please try again.";
-                });
-        });
-
-
-
-
-
-        document.getElementById('verifyKraPinBtn').addEventListener('click', function() {
-            const kraPin = document.getElementById('orgKraPin').value;
-            const kraPinError = document.getElementById('kraPinError');
-
-            // Validate KRA PIN (basic check for empty input)
-            if (!kraPin) {
-                kraPinError.innerText = "Please enter a KRA PIN.";
-                return;
-            }
-
-            // Send KRA PIN to the server for validation
-            fetch('validate_org_pin.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'orgKraPin=' + encodeURIComponent(kraPin)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        kraPinError.innerText = ""; // Clear any previous error
-                        document.getElementById('otherFieldsorg').style.display = 'block'; // Show other fields
-
-                        // Enable all other fields
-                        const otherFields = document.querySelectorAll('#otherFields input');
-                        otherFields.forEach(field => field.disabled = false);
-
-                        // Enable the 'Next' button if all required fields are filled
-                        checkFormCompletion();
-                    } else {
-                        kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    kraPinError.innerText = "An error occurred. Please try again.";
-                });
-        });
-
-
-
-
-
-
-
-        function validateEmail(email) {
-            const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-            return regex.test(email);
-        }
-
-        document.getElementById('email').addEventListener('blur', function() {
-            const email = this.value;
-            const emailHelp = document.getElementById('emailHelp');
-
-            if (!validateEmail(email)) {
-                emailHelp.textContent = "Please enter a valid email address.";
-                emailHelp.classList.remove('text-muted');
-                emailHelp.classList.add('text-danger');
-                this.classList.add('is-invalid');
-            } else {
-                emailHelp.textContent = "Email address is valid.";
-                emailHelp.classList.remove('text-danger');
-                emailHelp.classList.add('text-success');
-                this.classList.remove('is-invalid');
+    // Validate token with server
+    try {
+        const response = await fetch('api/validate-token.php', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
             }
         });
-
-        function validatePhone(phone) {
-            // Check if the phone number is exactly 10 digits and contains only numbers
-            const regex = /^\d{10}$/;
-            return regex.test(phone);
+        
+        if (!response.ok) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('nda_form');
+            localStorage.removeItem('selectedCategory');
+            window.location.href = 'login.html';
         }
+    } catch (error) {
+        console.error('Token validation error:', error);
+        window.location.href = 'login.html';
+    }
 
-        document.getElementById('phone').addEventListener('blur', function() {
-            const phone = this.value;
-            const phoneHelp = document.getElementById('phoneHelp');
+    // Load any previously saved form data
+    loadFormData();
+});
 
-            if (!validatePhone(phone)) {
-                phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
-                phoneHelp.classList.remove('text-muted');
-                phoneHelp.classList.add('text-danger');
-                this.classList.add('is-invalid');
-            } else {
-                phoneHelp.textContent = "Phone number is valid.";
-                phoneHelp.classList.remove('text-danger');
-                phoneHelp.classList.add('text-success');
-                this.classList.remove('is-invalid');
-            }
-        });
+// Function to check if all required fields are filled
+function checkFormCompletion() {
+    const userType = document.getElementById('userType').value;
+    let requiredFields;
 
-        function validateEmail(email) {
-            const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-            return regex.test(email);
+    if (userType === 'organization') {
+        requiredFields = document.querySelectorAll('#organizationFields input[required]');
+    } else {
+        requiredFields = document.querySelectorAll('#individualFields input[required]');
+    }
+
+    const allFilled = Array.from(requiredFields).every(field => field.value.trim() !== '');
+    document.getElementById('nextBtn').disabled = !allFilled;
+}
+
+// Function to save form data to localStorage
+function saveFormData() {
+    const formData = {
+        userType: document.getElementById('userType').value,
+        surname: document.getElementById('surname').value,
+        othernames: document.getElementById('othernames').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        kra_pin: document.getElementById('kra_pin').value,
+        orgName: document.getElementById('orgName').value,
+        orgPhone: document.getElementById('orgPhone').value,
+        orgEmail: document.getElementById('orgEmail').value,
+        orgKraPin: document.getElementById('orgKraPin').value
+    };
+    localStorage.setItem('taxAgentInfo', JSON.stringify(formData));
+}
+
+// Function to load saved form data
+function loadFormData() {
+    const storedData = localStorage.getItem('taxAgentInfo');
+    if (storedData) {
+        const formData = JSON.parse(storedData);
+        document.getElementById('userType').value = formData.userType;
+        document.getElementById('surname').value = formData.surname;
+        document.getElementById('othernames').value = formData.othernames;
+        document.getElementById('email').value = formData.email;
+        document.getElementById('phone').value = formData.phone;
+        document.getElementById('kra_pin').value = formData.kra_pin;
+        document.getElementById('orgName').value = formData.orgName;
+        document.getElementById('orgPhone').value = formData.orgPhone;
+        document.getElementById('orgEmail').value = formData.orgEmail;
+        document.getElementById('orgKraPin').value = formData.orgKraPin;
+
+        // Show/hide the correct section based on the userType
+        if (formData.userType === 'organization') {
+            document.getElementById('individualFields').style.display = 'none';
+            document.getElementById('organizationFields').style.display = 'block';
+        } else {
+            document.getElementById('individualFields').style.display = 'block';
+            document.getElementById('organizationFields').style.display = 'none';
         }
+        checkFormCompletion();
+    }
+}
 
-        document.getElementById('orgEmail').addEventListener('blur', function() {
-            const email = this.value;
-            const emailHelp = document.getElementById('emailHelporg');
+// KRA PIN verification for individuals
+document.getElementById('verifyPinBtn').addEventListener('click', function() {
+    const kraPin = document.getElementById('kra_pin').value;
+    const kraPinError = document.getElementById('kraPinError');
 
-            if (!validateEmail(email)) {
-                emailHelp.textContent = "Please enter a valid email address.";
-                emailHelp.classList.remove('text-muted');
-                emailHelp.classList.add('text-danger');
-                this.classList.add('is-invalid');
-            } else {
-                emailHelp.textContent = "Email address is valid.";
-                emailHelp.classList.remove('text-danger');
-                emailHelp.classList.add('text-success');
-                this.classList.remove('is-invalid');
-            }
-        });
+    if (!kraPin) {
+        kraPinError.innerText = "Please enter a KRA PIN.";
+        return;
+    }
 
-        function validatePhone(phone) {
-            // Check if the phone number is exactly 10 digits and contains only numbers
-            const regex = /^\d{10}$/;
-            return regex.test(phone);
+    fetch('validate_kra_pin.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+        },
+        body: 'kra_pin=' + encodeURIComponent(kraPin)
+    })
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
         }
-
-        document.getElementById('orgPhone').addEventListener('blur', function() {
-            const phone = this.value;
-            const phoneHelp = document.getElementById('phoneHelporg');
-
-            if (!validatePhone(phone)) {
-                phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
-                phoneHelp.classList.remove('text-muted');
-                phoneHelp.classList.add('text-danger');
-                this.classList.add('is-invalid');
-            } else {
-                phoneHelp.textContent = "Phone number is valid.";
-                phoneHelp.classList.remove('text-danger');
-                phoneHelp.classList.add('text-success');
-                this.classList.remove('is-invalid');
-            }
-        });
-
-
-
-
-
-
-
-
-        let generatedOtp = ''; // Store generated OTP
-
-        function generateOtp() {
-            return Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
-        }
-
-        function checkFormCompletion() {
-            const userType = document.getElementById('userType').value;
-            let requiredFields;
-
-            if (userType === 'organization') {
-                requiredFields = document.querySelectorAll('#organizationFields input[required]');
-            } else {
-                requiredFields = document.querySelectorAll('#individualFields input[required]');
-            }
-
-            const allFilled = Array.from(requiredFields).every(field => field.value.trim() !== '');
-            document.getElementById('nextBtn').disabled = !allFilled;
-        }
-
-        function saveFormData() {
-            const formData = {
-                userType: document.getElementById('userType').value,
-                surname: document.getElementById('surname').value,
-                othernames: document.getElementById('othernames').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                kra_pin: document.getElementById('kra_pin').value,
-                orgName: document.getElementById('orgName').value,
-                orgPhone: document.getElementById('orgPhone').value,
-                orgEmail: document.getElementById('orgEmail').value,
-                orgKraPin: document.getElementById('orgKraPin').value
-            };
-            localStorage.setItem('taxAgentInfo', JSON.stringify(formData));
-        }
-
-        function loadFormData() {
-            const storedData = localStorage.getItem('taxAgentInfo');
-            if (storedData) {
-                const formData = JSON.parse(storedData);
-                document.getElementById('userType').value = formData.userType;
-                document.getElementById('surname').value = formData.surname;
-                document.getElementById('othernames').value = formData.othernames;
-                document.getElementById('email').value = formData.email;
-                document.getElementById('phone').value = formData.phone;
-                document.getElementById('kra_pin').value = formData.kra_pin;
-                document.getElementById('orgName').value = formData.orgName;
-                document.getElementById('orgPhone').value = formData.orgPhone;
-                document.getElementById('orgEmail').value = formData.orgEmail;
-                document.getElementById('orgKraPin').value = formData.orgKraPin;
-
-                // Show/hide the correct section based on the userType
-                if (formData.userType === 'organization') {
-                    document.getElementById('individualFields').style.display = 'none';
-                    document.getElementById('organizationFields').style.display = 'block';
-                } else {
-                    document.getElementById('individualFields').style.display = 'block';
-                    document.getElementById('organizationFields').style.display = 'none';
-                }
-                checkFormCompletion();
-            }
-        }
-
-        // Call the function to load data when the page loads
-        loadFormData();
-
-        document.getElementById('userType').addEventListener('change', function() {
-            if (this.value === 'organization') {
-                document.getElementById('individualFields').style.display = 'none';
-                document.getElementById('organizationFields').style.display = 'block';
-            } else {
-                document.getElementById('individualFields').style.display = 'block';
-                document.getElementById('organizationFields').style.display = 'none';
-            }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === "success") {
+            kraPinError.innerText = "";
+            document.getElementById('otherFields').style.display = 'block';
+            const otherFields = document.querySelectorAll('#otherFields input');
+            otherFields.forEach(field => field.disabled = false);
             checkFormCompletion();
-        });
-
-        document.querySelectorAll('#step3Form input').forEach(input => {
-            input.addEventListener('input', checkFormCompletion);
-        });
-
-        document.getElementById('nextBtn').addEventListener('click', function() {
-            saveFormData(); // Ensure data is saved before proceeding
-
-            let email = document.getElementById('email').value;
-            fetch('send_otp.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'email=' + encodeURIComponent(email)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        $('#otpModal').modal('show'); // Open OTP modal
-                    } else {
-                        alert("Error sending OTP. Try again.");
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-
-        document.getElementById('verifyOtpBtn').addEventListener('click', function() {
-            let email = document.getElementById('email').value;
-            let otp = document.getElementById('otpInput').value;
-
-            fetch('verify_otp.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        $('#otpModal').modal('hide'); // Close OTP modal
-
-                        window.location.href = 'client.php';
-
-                    } else {
-                        document.getElementById('otpError').innerText = data.message;
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-
-
-        document.getElementById('resendOtpBtn').addEventListener('click', function() {
-            let email = document.getElementById('email').value;
-
-            fetch('send_otp.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'email=' + encodeURIComponent(email)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        alert("A new OTP has been sent.");
-                    } else {
-                        alert("Error resending OTP. Try again.");
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-
-        document.getElementById('backBtn').addEventListener('click', function() {
-            saveFormData();
-            window.location.href = 'options.php';
-        });
+        } else {
+            kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        kraPinError.innerText = "An error occurred. Please try again.";
     });
+});
+
+// KRA PIN verification for organizations
+document.getElementById('verifyKraPinBtn').addEventListener('click', function() {
+    const kraPin = document.getElementById('orgKraPin').value;
+    const kraPinError = document.getElementById('kraPinError');
+
+    if (!kraPin) {
+        kraPinError.innerText = "Please enter a KRA PIN.";
+        return;
+    }
+
+    fetch('validate_org_pin.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+        },
+        body: 'orgKraPin=' + encodeURIComponent(kraPin)
+    })
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === "success") {
+            kraPinError.innerText = "";
+            document.getElementById('otherFieldsorg').style.display = 'block';
+            const otherFields = document.querySelectorAll('#otherFields input');
+            otherFields.forEach(field => field.disabled = false);
+            checkFormCompletion();
+        } else {
+            kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        kraPinError.innerText = "An error occurred. Please try again.";
+    });
+});
+
+// Email validation
+function validateEmail(email) {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return regex.test(email);
+}
+
+document.getElementById('email').addEventListener('blur', function() {
+    const email = this.value;
+    const emailHelp = document.getElementById('emailHelp');
+
+    if (!validateEmail(email)) {
+        emailHelp.textContent = "Please enter a valid email address.";
+        emailHelp.classList.remove('text-muted');
+        emailHelp.classList.add('text-danger');
+        this.classList.add('is-invalid');
+    } else {
+        emailHelp.textContent = "Email address is valid.";
+        emailHelp.classList.remove('text-danger');
+        emailHelp.classList.add('text-success');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Phone validation
+function validatePhone(phone) {
+    const regex = /^\d{10}$/;
+    return regex.test(phone);
+}
+
+document.getElementById('phone').addEventListener('blur', function() {
+    const phone = this.value;
+    const phoneHelp = document.getElementById('phoneHelp');
+
+    if (!validatePhone(phone)) {
+        phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
+        phoneHelp.classList.remove('text-muted');
+        phoneHelp.classList.add('text-danger');
+        this.classList.add('is-invalid');
+    } else {
+        phoneHelp.textContent = "Phone number is valid.";
+        phoneHelp.classList.remove('text-danger');
+        phoneHelp.classList.add('text-success');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Organization email validation
+document.getElementById('orgEmail').addEventListener('blur', function() {
+    const email = this.value;
+    const emailHelp = document.getElementById('emailHelporg');
+
+    if (!validateEmail(email)) {
+        emailHelp.textContent = "Please enter a valid email address.";
+        emailHelp.classList.remove('text-muted');
+        emailHelp.classList.add('text-danger');
+        this.classList.add('is-invalid');
+    } else {
+        emailHelp.textContent = "Email address is valid.";
+        emailHelp.classList.remove('text-danger');
+        emailHelp.classList.add('text-success');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Organization phone validation
+document.getElementById('orgPhone').addEventListener('blur', function() {
+    const phone = this.value;
+    const phoneHelp = document.getElementById('phoneHelporg');
+
+    if (!validatePhone(phone)) {
+        phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
+        phoneHelp.classList.remove('text-muted');
+        phoneHelp.classList.add('text-danger');
+        this.classList.add('is-invalid');
+    } else {
+        phoneHelp.textContent = "Phone number is valid.";
+        phoneHelp.classList.remove('text-danger');
+        phoneHelp.classList.add('text-success');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// User type change handler
+document.getElementById('userType').addEventListener('change', function() {
+    if (this.value === 'organization') {
+        document.getElementById('individualFields').style.display = 'none';
+        document.getElementById('organizationFields').style.display = 'block';
+    } else {
+        document.getElementById('individualFields').style.display = 'block';
+        document.getElementById('organizationFields').style.display = 'none';
+    }
+    checkFormCompletion();
+});
+
+// Form input handlers
+document.querySelectorAll('#step3Form input').forEach(input => {
+    input.addEventListener('input', checkFormCompletion);
+});
+
+// Next button handler
+document.getElementById('nextBtn').addEventListener('click', function() {
+    saveFormData();
+
+    let email = document.getElementById('email').value;
+    fetch('send_otp.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+        },
+        body: 'email=' + encodeURIComponent(email)
+    })
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === "success") {
+            $('#otpModal').modal('show');
+        } else {
+            alert("Error sending OTP. Try again.");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+// OTP verification handler
+document.getElementById('verifyOtpBtn').addEventListener('click', function() {
+    let email = document.getElementById('email').value;
+    let otp = document.getElementById('otpInput').value;
+
+    fetch('verify_otp.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+        },
+        body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
+    })
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === "success") {
+            $('#otpModal').modal('hide');
+            window.location.href = 'client.php';
+        } else {
+            document.getElementById('otpError').innerText = data.message;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+// Resend OTP handler
+document.getElementById('resendOtpBtn').addEventListener('click', function() {
+    let email = document.getElementById('email').value;
+
+    fetch('send_otp.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+        },
+        body: 'email=' + encodeURIComponent(email)
+    })
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === "success") {
+            alert("A new OTP has been sent.");
+        } else {
+            alert("Error resending OTP. Try again.");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+// Back button handler
+document.getElementById('backBtn').addEventListener('click', function() {
+    saveFormData();
+    window.location.href = 'options.php';
+});
 </script>
 
 <?php include 'footer.php'; ?>

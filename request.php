@@ -36,13 +36,21 @@ try {
                     <input type="checkbox" class="form-check-input" id="agreement" required>
                     <label class="form-check-label" for="agreement">I agree to the terms and conditions of this NDA</label>
                 </div>
-                <button type="button" id="nextBtn" class="btn btn-primary float-right mt-3" disabled>Next</button>
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="button" id="backBtn" class="btn btn-secondary">Back to Dashboard</button>
+                    <button type="button" id="nextBtn" class="btn btn-primary" disabled>Next</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
 <script>
+    // Back button functionality
+    document.getElementById('backBtn').addEventListener('click', function() {
+        window.location.href = 'dashboard.php';
+    });
+
     document.getElementById('ndaForm').addEventListener('input', function() {
         const signature = document.getElementById('signature').value.trim();
         const agreement = document.getElementById('agreement').checked;
@@ -83,9 +91,8 @@ try {
         const xPos = (pageWidth - imgWidth) / 2; // Center the image horizontally
 
         pdf.addImage(imageData, 'PNG', xPos, 12, imgWidth, imgHeight); // Adjust the Y position for the image
-
-        // Add NDA content below the image
-        pdf.setFont("Arial", "normal");
+       // Add NDA content below the image
+       pdf.setFont("Arial", "normal");
         pdf.setFontSize(12);
         pdf.setTextColor(0, 0, 0); // Black color for text
         pdf.text("Terms of the Agreement", 10, 50);
@@ -98,6 +105,7 @@ try {
         pdf.text("(“Disclosing Party”) and", 10, 120);
         pdf.text("2. [Receiving Party's Name] with an address of [Receiving Party's Address] (hereinafter referred to as the", 10, 130);
         pdf.text("\"Receiving Party\") (collectively referred to as the “Parties”).", 10, 140);
+
 
 
         // Add footer
@@ -189,6 +197,5 @@ try {
     }
 });
 </script>
-
 
 <?php include 'footer.php'; ?>
