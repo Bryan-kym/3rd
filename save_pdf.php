@@ -1,6 +1,16 @@
 <?php
 // Include the necessary configuration file to connect to the database
 include 'config.php';
+require_once 'auth.php';
+
+try{
+    $userId = authenticate();
+    
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if (empty($data['pdf']) || empty($data['name'])) {
+        throw new Exception('Missing required fields');
+    }
 
 // Set content type to JSON for API response
 header('Content-Type: application/json');
@@ -47,6 +57,7 @@ if (isset($data['pdf']) && isset($data['name'])) {
 } else {
     // Error: missing data
     echo json_encode(['success' => false, 'message' => 'Invalid data']);
+}
 }
 
 // Close database connection

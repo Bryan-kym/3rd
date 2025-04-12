@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare("INSERT INTO requestors (fullnames, phone_number, email, requester_type, kra_pin, taxagent_type, client_type, 
         requester_affiliation_name, requester_affiliation_phone, requester_affiliation_email, requester_affiliation_pin) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sisssssssss", $names, $phoneNumber, $email, $category, $kraPin, $taxAgentType, $clientType, $cnames, $cphoneNumber, $cemail, $ckraPin); // Adjust types as needed
+        $stmt->bind_param("sissssssiss", $names, $phoneNumber, $email, $category, $kraPin, $taxAgentType, $clientType, $cnames, $cphoneNumber, $cemail, $ckraPin); // Adjust types as needed
         if (!$stmt->execute()) {
             throw new Exception("Error inserting requestor: " . $stmt->error);
         }
@@ -193,12 +193,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($templateUpload != '') {
             $stmt5 = $conn->prepare("INSERT INTO requestors_documents (document_name, document_type, document_file_path, request_id, requester_id, last_edited_on) VALUES ('Supporting document', ?, ?, ?, ?, NOW())");
-        $stmt5->bind_param("ssss", $templateFileType, $compTemplateUlp, $requestId, $personalInfoId); // Adjust types as needed
-        if (!$stmt5->execute()) {
-            throw new Exception("Error inserting template: " . $stmt5->error);
+            $stmt5->bind_param("ssss", $templateFileType, $compTemplateUlp, $requestId, $personalInfoId); // Adjust types as needed
+            if (!$stmt5->execute()) {
+                throw new Exception("Error inserting template: " . $stmt5->error);
+            }
         }
-        }
-       
+
 
         $conn->commit();
         echo json_encode(["success" => true, "message" => "Data submitted successfully"]);

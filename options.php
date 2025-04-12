@@ -107,7 +107,7 @@ document.getElementById('nextBtn').addEventListener('click', function() {
 });
 
 document.getElementById('backBtn').addEventListener('click', function() {
-    window.location.href = 'index.php'; // Redirect back to Step 1
+    window.location.href = 'request.php'; // Redirect back to Step 1
 });
 </script>
 

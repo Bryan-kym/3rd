@@ -1,0 +1,71 @@
+[09-Apr-2025 11:50:38 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: The definition of table 'expired_tokens' prevents operation UPDATE on table 'user_tokens'. in /var/www/html/3rd-be/update_token_status.php:14
+Stack trace:
+#0 /var/www/html/3rd-be/update_token_status.php(14): mysqli->query()
+#1 /var/www/html/3rd-be/token_verify.php(4): updateTokenStatusUsingView()
+#2 /var/www/html/3rd-be/headers.php(15): include('...')
+#3 /var/www/html/3rd-be/login.php(2): include('...')
+#4 {main}
+  thrown in /var/www/html/3rd-be/update_token_status.php on line 14
+[09-Apr-2025 11:54:17 Africa/Nairobi] PHP Fatal error:  Uncaught mysqli_sql_exception: The definition of table 'expired_tokens' prevents operation UPDATE on table 'user_tokens'. in /var/www/html/3rd-be/update_token_status.php:14
+Stack trace:
+#0 /var/www/html/3rd-be/update_token_status.php(14): mysqli->query()
+#1 /var/www/html/3rd-be/token_verify.php(4): updateTokenStatusUsingView()
+#2 /var/www/html/3rd-be/headers.php(15): include('...')
+#3 /var/www/html/3rd-be/login.php(2): include('...')
+#4 {main}
+  thrown in /var/www/html/3rd-be/update_token_status.php on line 14
+[09-Apr-2025 09:37:31 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /var/www/html/3rd/config.php:17
+Stack trace:
+#0 /var/www/html/3rd/config.php(17): mysqli->__construct()
+#1 /var/www/html/3rd/save_pdf.php(3): include('...')
+#2 {main}
+  thrown in /var/www/html/3rd/config.php on line 17
+[09-Apr-2025 09:51:22 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /var/www/html/3rd/config.php:17
+Stack trace:
+#0 /var/www/html/3rd/config.php(17): mysqli->__construct()
+#1 /var/www/html/3rd/save_pdf.php(3): include('...')
+#2 {main}
+  thrown in /var/www/html/3rd/config.php on line 17
+[09-Apr-2025 09:54:20 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /var/www/html/3rd/config.php:17
+Stack trace:
+#0 /var/www/html/3rd/config.php(17): mysqli->__construct()
+#1 /var/www/html/3rd/save_pdf.php(3): include('...')
+#2 {main}
+  thrown in /var/www/html/3rd/config.php on line 17
+[09-Apr-2025 09:57:44 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /var/www/html/3rd/config.php:17
+Stack trace:
+#0 /var/www/html/3rd/config.php(17): mysqli->__construct()
+#1 /var/www/html/3rd/save_pdf.php(3): include('...')
+#2 {main}
+  thrown in /var/www/html/3rd/config.php on line 17
+[09-Apr-2025 09:58:57 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /var/www/html/3rd/config.php:17
+Stack trace:
+#0 /var/www/html/3rd/config.php(17): mysqli->__construct()
+#1 /var/www/html/3rd/save_pdf.php(3): include('...')
+#2 {main}
+  thrown in /var/www/html/3rd/config.php on line 17
+[09-Apr-2025 13:05:06 Africa/Nairobi] PHP Warning:  file_put_contents(uploads/nda_67f64652c3add.pdf): Failed to open stream: Permission denied in /var/www/html/3rd/save_pdf.php on line 25
+[09-Apr-2025 13:06:07 Africa/Nairobi] PHP Warning:  file_put_contents(uploads/nda_67f6468fc186c.pdf): Failed to open stream: Permission denied in /var/www/html/3rd/save_pdf.php on line 25
+[09-Apr-2025 13:06:12 Africa/Nairobi] PHP Warning:  file_put_contents(uploads/nda_67f6469497e94.pdf): Failed to open stream: Permission denied in /var/www/html/3rd/save_pdf.php on line 25
+[09-Apr-2025 13:09:12 Africa/Nairobi] PHP Warning:  file_put_contents(uploads/nda_67f64748aef52.pdf): Failed to open stream: Permission denied in /var/www/html/3rd/save_pdf.php on line 25
+[09-Apr-2025 13:11:20 Africa/Nairobi] PHP Warning:  file_put_contents(uploads/nda_67f647c8af113.pdf): Failed to open stream: Permission denied in /var/www/html/3rd/save_pdf.php on line 25
+[10-Apr-2025 10:49:25 Africa/Nairobi] Database error: Incorrect integer value: '' for column 'requester_affiliation_phone' at row 1
+[10-Apr-2025 10:49:25 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:25 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:25 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:26 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:26 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:26 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:26 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:26 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:26 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:49 Africa/Nairobi] Database error: Incorrect integer value: '' for column 'requester_affiliation_phone' at row 1
+[10-Apr-2025 10:49:49 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:49 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:49 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:50 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:50 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:50 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:50 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:50 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12
+[10-Apr-2025 10:49:50 Africa/Nairobi] PHP Warning:  Undefined variable $trackingID in /var/www/html/3rd/mail_reviewers.php on line 12

@@ -129,7 +129,7 @@
                     if (data.success) {
                         alert("Submission successful!");
                         localStorage.clear();
-                        window.location.href = "index.php";
+                        window.location.href = "request.php";
                     } else {
                         errorMessage.textContent = data.error || "An unexpected error occurred.";
                     }
