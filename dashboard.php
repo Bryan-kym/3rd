@@ -8,7 +8,7 @@ try {
     $userId = authenticate();
 
     // Fetch user data
-    $stmt = $conn->prepare("SELECT email, is_active FROM ext_users WHERE id = ?");
+    $stmt = $conn->prepare("SELECT surname, email, is_active FROM ext_users WHERE id = ?");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -259,7 +259,7 @@ try {
 
         <div class="dashboard-container">
             <div class="user-info">
-                <h1>Welcome, <?php echo htmlspecialchars($user['email']); ?></h1>
+                <h1>Welcome, <?php echo htmlspecialchars($user['surname']); ?></h1>
                 <p>You are successfully logged in to your account.</p>
             </div>
 

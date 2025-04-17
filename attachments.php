@@ -18,7 +18,7 @@ try {
 }
 ?>
 
-<div class="container mt-5">
+<div class="container mt-5 w-50">
     <div class="card">
         <div class="card-body">
             <h3 class="card-title">Upload Attachments</h3>
