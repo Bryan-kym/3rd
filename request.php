@@ -1,201 +1,343 @@
 <?php 
+ob_start(); // Start output buffering
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once 'auth.php';
 include 'header.php'; 
-require_once 'auth.php'; // Include your authentication functions
 
-// Check if user is authenticated
+
 try {
-    $userId = authenticate(); // This will redirect if not authenticated
+    $userId = authenticate();
 } catch (Exception $e) {
-    // Redirect to login if not authenticated
-    header('Location: login.html?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
     exit;
 }
 ?>
 
-<div class="container mt-5 w-50">
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Non-Disclosure Agreement</h3>
-            <p>Please read and agree to the following NDA terms to proceed.</p>
+<!-- Add jsPDF script right after opening body -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    // Make jsPDF available globally
+    window.jsPDF = window.jspdf.jsPDF;
+</script>
 
-            <!-- NDA Text -->
-            <div class="mb-4" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-                <p><strong>Non-Disclosure Agreement (NDA)</strong></p>
-                <p>This Agreement is made between [Organization Name] and the user. By agreeing to this NDA, you commit not to disclose any proprietary or confidential information shared by [Organization Name] during the course of this application.</p>
-                <p>Your acceptance of these terms is required to proceed with the request for information. This NDA is legally binding and will be enforceable in accordance with the laws of the applicable jurisdiction.</p>
-                <p>By typing your name in the box below and clicking "I Agree," you confirm your consent to the terms outlined in this agreement.</p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pt-4 pb-2">
+                    <div class="text-center">
+                        <img src="assets/images/kralogo1.png" alt="KRA Logo" class="mb-3" style="height: 50px;">
+                        <h3 class="card-title text-primary fw-bold mb-1">Non-Disclosure Agreement</h3>
+                        <p class="text-muted">Please carefully review and accept the terms below to proceed</p>
+                    </div>
+                </div>
+                
+                <div class="card-body px-4 px-md-5 py-4">
+                    <!-- NDA Content Box -->
+                    <div class="nda-content mb-4">
+                        <div class="nda-header text-center mb-4">
+                            <h4 class="fw-bold text-primary">CONFIDENTIALITY AGREEMENT</h4>
+                            <p class="text-muted">Between Kenya Revenue Authority and the User</p>
+                            <hr class="mx-auto" style="width: 100px; border-top: 2px solid #0d6efd;">
+                        </div>
+                        
+                        <div class="nda-body">
+                            <p>This Non-Disclosure Agreement ("Agreement") is entered into by and between <strong>Kenya Revenue Authority</strong> ("Disclosing Party") and <strong>You</strong> ("Receiving Party") for the purpose of preventing the unauthorized disclosure of Confidential Information as defined below.</p>
+                            
+                            <h5 class="mt-4 fw-bold">1. Definition of Confidential Information</h5>
+                            <p>For purposes of this Agreement, "Confidential Information" shall include all information or material that has or could have commercial value or other utility in the business in which Disclosing Party is engaged.</p>
+                            
+                            <h5 class="mt-4 fw-bold">2. Obligations of Receiving Party</h5>
+                            <p>Receiving Party shall hold and maintain the Confidential Information in strictest confidence for the sole and exclusive benefit of the Disclosing Party. Receiving Party shall carefully restrict access to Confidential Information to employees, contractors and third parties as is reasonably required.</p>
+                            
+                            <h5 class="mt-4 fw-bold">3. Time Periods</h5>
+                            <p>The nondisclosure provisions of this Agreement shall survive the termination of this Agreement and Receiving Party's duty to hold Confidential Information in confidence shall remain in effect until the Confidential Information no longer qualifies as a trade secret or until Disclosing Party sends Receiving Party written notice releasing Receiving Party from this Agreement.</p>
+                            
+                            <h5 class="mt-4 fw-bold">4. Governing Law</h5>
+                            <p>This Agreement shall be governed by and construed in accordance with the laws of the Republic of Kenya. Any disputes arising under this Agreement shall be resolved in the appropriate courts of Kenya.</p>
+                            
+                            <div class="signature-notice mt-4 p-3 bg-light rounded">
+                                <p class="mb-0"><strong>By typing your full name below and checking the agreement box, you acknowledge that you have read, understood, and agree to be legally bound by all terms and conditions of this Non-Disclosure Agreement.</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Agreement Form -->
+                    <form id="ndaForm" class="needs-validation" novalidate>
+                        <div class="form-floating mb-4">
+                            <input type="text" class="form-control" id="signature" placeholder="John Doe" required>
+                            <label for="signature">Full Name (Electronic Signature)</label>
+                            <div class="invalid-feedback">Please enter your full name as electronic signature</div>
+                        </div>
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="agreement" required>
+                            <label class="form-check-label fw-bold" for="agreement">
+                                I acknowledge that I have read and agree to all terms of this Non-Disclosure Agreement
+                            </label>
+                            <div class="invalid-feedback">You must agree to the terms to proceed</div>
+                        </div>
+                        
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4 pt-2">
+                            <button type="button" id="backBtn" class="btn btn-outline-secondary px-4 py-2">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                            </button>
+                            <button type="button" id="nextBtn" class="btn btn-primary px-4 py-2" disabled>
+                                Accept and Continue <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <!-- Signature Input and Agreement Checkbox -->
-            <form id="ndaForm">
-                <div class="form-group">
-                    <label for="signature">Type your name as a signature</label>
-                    <input type="text" class="form-control" id="signature" required>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="agreement" required>
-                    <label class="form-check-label" for="agreement">I agree to the terms and conditions of this NDA</label>
-                </div>
-                <div class="d-flex justify-content-between mt-3">
-                    <button type="button" id="backBtn" class="btn btn-secondary">Back to Dashboard</button>
-                    <button type="button" id="nextBtn" class="btn btn-primary" disabled>Next</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
+<style>
+    /* Custom NDA Styling */
+    .nda-content {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 1.5rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fdfdfd;
+    }
+    
+    .nda-content::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .nda-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .nda-content::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+    
+    .nda-content::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    .nda-body h5 {
+        color: #2c3e50;
+        font-size: 1.1rem;
+    }
+    
+    .nda-body p {
+        color: #4a5568;
+        line-height: 1.6;
+    }
+    
+    .signature-notice {
+        border-left: 4px solid #0d6efd;
+    }
+    
+    /* Card Styling */
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+    
+    /* Form Styling */
+    .form-floating label {
+        color: #6c757d;
+    }
+    
+    .form-control {
+        border: 1px solid #ced4da;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+    
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    /* Button Styling */
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .nda-content {
+            max-height: 300px;
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const signatureInput = document.getElementById('signature');
+    const agreementCheckbox = document.getElementById('agreement');
+    const nextBtn = document.getElementById('nextBtn');
+    const ndaForm = document.getElementById('ndaForm');
+    
+    // Form validation function
+    function validateForm() {
+        const isSignatureValid = signatureInput.value.trim().length > 0;
+        const isAgreementChecked = agreementCheckbox.checked;
+        nextBtn.disabled = !(isSignatureValid && isAgreementChecked);
+    }
+    
+    // Event listeners for form validation
+    signatureInput.addEventListener('input', validateForm);
+    agreementCheckbox.addEventListener('change', validateForm);
+    
     // Back button functionality
     document.getElementById('backBtn').addEventListener('click', function() {
         window.location.href = 'dashboard.php';
     });
+    
+    // Next button functionality - handles PDF generation and submission
+    nextBtn.addEventListener('click', async function() {
+        if (nextBtn.disabled) return;
+        
+        if (typeof jsPDF === 'undefined') {
+            alert('PDF library not loaded. Please refresh the page.');
+            return;
+        }
 
-    document.getElementById('ndaForm').addEventListener('input', function() {
-        const signature = document.getElementById('signature').value.trim();
-        const agreement = document.getElementById('agreement').checked;
-        document.getElementById('nextBtn').disabled = !(signature && agreement);
-    });
+        const name = signatureInput.value.trim();
+        const token = localStorage.getItem('authToken');
 
-    document.getElementById('nextBtn').addEventListener('click', async function() {
-        const name = document.getElementById('signature').value.trim();
-
-        // Fetch the Base64 image from PHP script
-        const imageResponse = await fetch('image_encode.php');
-        const imageData = await imageResponse.text(); // The Base64 image strings
-
-        // Create a new PDF
-        const {
-            jsPDF
-        } = window.jspdf;
-        const pdf = new jsPDF();
-
-        // Add CONFIDENTIAL tag
-        pdf.setFont("Georgia", "bold");
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0); // Red color for emphasis
-        pdf.text("PUBLIC", pdf.internal.pageSize.width - 10, 10, {
-            align: "right"
-        });
-
-        // Get today's date
-        const today = new Date();
-
-        // Format the date to YYYY-MM-DD
-        const formattedDate = today.toISOString().split('T')[0];
-
-        // Add image to the header (centered on the page)
-        const imgWidth = 90; // Width of the image
-        const imgHeight = 23; // Height of the image
-        const pageWidth = pdf.internal.pageSize.width;
-        const xPos = (pageWidth - imgWidth) / 2; // Center the image horizontally
-
-        pdf.addImage(imageData, 'PNG', xPos, 12, imgWidth, imgHeight); // Adjust the Y position for the image
-       // Add NDA content below the image
-       pdf.setFont("Arial", "normal");
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0); // Black color for text
-        pdf.text("Terms of the Agreement", 10, 50);
-        pdf.text("This Non-Disclosure Agreement (hereinafter referred to as the “Agreement”) is entered into on " + formattedDate, 10, 60);
-        pdf.text("by and between:", 10, 70);
-        pdf.text("1. Kenya Revenue Authority (KRA), a State Corporation in the Republic of Kenya, duly incorporated under the ", 10, 80);
-        pdf.text("Kenya Revenue Authority Act (Cap. 469) of the Laws of Kenya and whose registered office is situated at Times Tower,", 10, 90);
-        pdf.text("Haile Selassie Avenue and of P.O. Box 48240 – 00100, Nairobi (hereinafter referred to as “KRA” which expression shall", 10, 100);
-        pdf.text("where the context so admits include its successors and assigns) of the one part; (hereinafter referred to as the", 10, 110);
-        pdf.text("(“Disclosing Party”) and", 10, 120);
-        pdf.text("2. [Receiving Party's Name] with an address of [Receiving Party's Address] (hereinafter referred to as the", 10, 130);
-        pdf.text("\"Receiving Party\") (collectively referred to as the “Parties”).", 10, 140);
-
-
-
-        // Add footer
-        pdf.setFont("Georgia", "bold");
-        pdf.setFontSize(16);
-        pdf.setTextColor(255, 0, 0); // Black color for text
-        pdf.text("Tulipe Ushuru, Tijitegemee!", 80, 288);
-
-        // Convert PDF to Base64
-        const pdfData = pdf.output('datauristring').split(',')[1];
-
-        // Send the PDF to the server
         try {
+            // 1. Fetch the Base64 image
+            const imageResponse = await fetch('image_encode.php', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!imageResponse.ok) {
+                if (imageResponse.status === 401) {
+                    window.location.href = 'login.php?session_expired=1';
+                    return;
+                }
+                throw new Error('Failed to fetch image');
+            }
+            
+            const imageData = await imageResponse.text();
+
+            // 2. Create PDF document
+            const doc = new jsPDF();
+            
+            // Add CONFIDENTIAL tag
+            doc.setFont("Georgia", "bold");
+            doc.setFontSize(10);
+            doc.text("PUBLIC", doc.internal.pageSize.width - 10, 10, { align: "right" });
+
+            // Add date
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('en-GB');
+
+            // Add KRA logo
+            const imgWidth = 90;
+            const imgHeight = 23;
+            const pageWidth = doc.internal.pageSize.width;
+            const xPos = (pageWidth - imgWidth) / 2;
+            doc.addImage(imageData, 'PNG', xPos, 12, imgWidth, imgHeight);
+
+            // Add NDA content
+            doc.setFont("Arial", "normal");
+            doc.setFontSize(12);
+            
+            const ndaContent = [
+                { text: "Terms of the Agreement", y: 50 },
+                { text: `This Non-Disclosure Agreement is entered into on ${formattedDate}`, y: 60 },
+                { text: "by and between:", y: 70 },
+                { text: "1. Kenya Revenue Authority (KRA), a State Corporation in the Republic of Kenya,", y: 80 },
+                { text: "duly incorporated under the Kenya Revenue Authority Act (Cap. 469) of the Laws of Kenya", y: 90 },
+                { text: "2. " + name + " (Hereinafter referred to as the \"Receiving Party\")", y: 100 }
+            ];
+
+            ndaContent.forEach(item => {
+                doc.text(item.text, 10, item.y);
+            });
+
+            // Add footer
+            doc.setFont("Georgia", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(255, 0, 0);
+            doc.text("Tulipe Ushuru, Tijitegemee!", 80, 288);
+
+            // 3. Save PDF to server
+            const pdfData = doc.output('datauristring').split(',')[1];
+            
             const response = await fetch('save_pdf.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     pdf: pdfData,
-                    name
+                    name: name
                 })
             });
+            
             const data = await response.json();
-            if (data.success) {
-                localStorage.setItem('uploadedFilePath', data.filePath);
-                // Assuming you got the JSON response in a variable called responseData:
-                localStorage.setItem('nda_form', data.nda_form);
-                window.location.href = 'options.php'; // Redirect to Step 2
-            } else {
+            
+            if (!response.ok) {
                 throw new Error(data.message || 'Failed to save PDF');
             }
+            
+            if (data.success) {
+                // 4. Store NDA completion status and redirect
+                localStorage.setItem('nda_form', JSON.stringify({
+                    filePath: data.filePath,
+                    formData: data.nda_form
+                }));
+                window.location.href = 'options.php';
+            } else {
+                throw new Error(data.message || 'Server error');
+            }
         } catch (error) {
-            console.error('Error creating NDA:', error);
-
+            console.error('Error:', error);
+            alert('Error: ' + error.message);
         }
     });
-
-    document.getElementById('nextBtn').addEventListener('click', async function() {
-    const name = document.getElementById('signature').value.trim();
-    const token = localStorage.getItem('authToken'); // Get stored token
-
-    // Fetch the Base64 image from PHP script
-    const imageResponse = await fetch('image_encode.php', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
-    
-    if (!imageResponse.ok) {
-        // Handle unauthorized
-        window.location.href = 'api/login.php';
-        return;
-    }
-
-    // ... rest of your PDF generation code ...
-
-    // Send the PDF to the server with auth token
-    try {
-        const response = await fetch('save_pdf.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                pdf: pdfData,
-                name
-            })
-        });
-        
-        if (response.status === 401) {
-            // Token expired, redirect to login
-            window.location.href = 'api/login.php?session_expired=1';
-            return;
-        }
-        
-        const data = await response.json();
-        if (data.success) {
-            localStorage.setItem('uploadedFilePath', data.filePath);
-            localStorage.setItem('nda_form', data.nda_form);
-            window.location.href = 'options.php';
-        } else {
-            throw new Error(data.message || 'Failed to save PDF');
-        }
-    } catch (error) {
-        console.error('Error creating NDA:', error);
-        // Show error to user
-    }
 });
 </script>
 
-<?php include 'footer.php'; ?>
+<?php 
+include 'footer.php';
+ob_flush(); // Flush the output buffer
+?>

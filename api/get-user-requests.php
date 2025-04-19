@@ -44,9 +44,9 @@ try {
         $requests[] = [
             'id' => $row['id'],
             'tracking_number' => $row['tracking_number'],
-            'date' => $requestDate->format('M d, Y'),
+            'request_date' => $requestDate->format('M d, Y'),
             'datetime' => $requestDate->format('Y-m-d H:i:s'),
-            'status' => $row['request_status'],
+            'request_status' => $row['request_status'],
             'category' => $row['category'],
             'data_description' => $row['data_description'],
             'specific_fields' => $row['specific_fields'],
