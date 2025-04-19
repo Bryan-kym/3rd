@@ -43,80 +43,226 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request Details</title>
+    <title>Request Details - KRA 3rd Party Data Request</title>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
+        :root {
+            --primary-red: #d9232e;
+            --dark-red: #a51b24;
+            --dark-black: #151515;
+            --light-grey: #f8f9fa;
+            --medium-grey: #e9ecef;
+            --dark-grey: #6c757d;
+            --border-radius: 0.5rem;
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--light-grey);
+            font-family: 'Roboto', sans-serif;
+            color: #212529;
+        }
+
         .detail-container {
             background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin: 20px;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin: 2rem auto;
+            max-width: 1200px;
+            position: relative;
+            overflow: hidden;
         }
-        .detail-section {
+
+        .detail-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-red), var(--dark-black));
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--medium-grey);
         }
+
+        .detail-header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--dark-black);
+            margin: 0;
+        }
+
+        .detail-header small {
+            font-size: 1rem;
+            color: var(--dark-grey);
+        }
+
+        .detail-section {
+            margin-bottom: 2.5rem;
+            background: var(--light-grey);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .detail-section:hover {
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-section h3 {
+            font-size: 1.2rem;
+            color: var(--primary-red);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(217, 35, 46, 0.2);
+        }
+
         .detail-row {
             display: flex;
             margin-bottom: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
         .detail-label {
-            font-weight: bold;
-            width: 200px;
+            font-weight: 600;
+            width: 220px;
+            color: var(--dark-black);
+            display: flex;
+            align-items: center;
         }
+
+        .detail-label i {
+            margin-right: 0.75rem;
+            color: var(--primary-red);
+            width: 20px;
+            text-align: center;
+        }
+
         .detail-value {
             flex: 1;
+            color: var(--dark-grey);
+            line-height: 1.6;
         }
+
         .action-buttons {
             display: flex;
-            gap: 10px;
-            margin-top: 2rem;
+            gap: 1rem;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
         }
+
         .btn {
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
             cursor: pointer;
             text-decoration: none;
-            display: inline-block;
-        }
-        .btn-primary {
-            background: #007bff;
-            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: var(--transition);
             border: none;
         }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            border: none;
-        }
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-approved { background: #d4edda; color: #155724; }
-        .status-rejected { background: #f8d7da; color: #721c24; }
-        .status-reviewed { background: #cce5ff; color: #004085; }
-        .status-resolved { background: #d4edda; color: #155724; }
-        .status-assigned { background: #fff3cd; color: #856404; }
-        .status-processing { background: #cce5ff; color: #004085; }
 
-        /* Notification Styles */
+        .btn-primary {
+            background-color: var(--primary-red);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--dark-red);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(217, 35, 46, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge i {
+            font-size: 1rem;
+        }
+
+        .status-pending { 
+            background-color: rgba(255, 193, 7, 0.1); 
+            color: #ffc107;
+        }
+        .status-approved { 
+            background-color: rgba(40, 167, 69, 0.1); 
+            color: #28a745;
+        }
+        .status-rejected { 
+            background-color: rgba(220, 53, 69, 0.1); 
+            color: #dc3545;
+        }
+        .status-reviewed { 
+            background-color: rgba(23, 162, 184, 0.1); 
+            color: #17a2b8;
+        }
+        .status-resolved { 
+            background-color: rgba(40, 167, 69, 0.1); 
+            color: #28a745;
+        }
+        .status-assigned { 
+            background-color: rgba(255, 193, 7, 0.1); 
+            color: #ffc107;
+        }
+        .status-processing { 
+            background-color: rgba(23, 162, 184, 0.1); 
+            color: #17a2b8;
+        }
+
+        /* Enhanced Notification Styles */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 15px 25px;
-            border-radius: 5px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-            transform: translateX(200%);
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            z-index: 1000;
-            color: white;
+            padding: 1.25rem 1.75rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
             display: flex;
             align-items: center;
-            max-width: 400px;
+            gap: 1rem;
+            z-index: 1000;
+            transform: translateX(200%);
+            transition: var(--transition);
             opacity: 0;
+            backdrop-filter: blur(5px);
+            max-width: 400px;
         }
         
         .notification.show {
@@ -125,35 +271,92 @@ try {
         }
         
         .notification.success {
-            background: #28a745;
-            border-left: 5px solid #218838;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.9), rgba(33, 136, 56, 0.9));
+            color: white;
+            border-left: 4px solid #1e7e34;
         }
         
         .notification.error {
-            background: #dc3545;
-            border-left: 5px solid #c82333;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(200, 35, 51, 0.9));
+            color: white;
+            border-left: 4px solid #bd2130;
         }
         
         .notification.info {
-            background: #17a2b8;
-            border-left: 5px solid #138496;
+            background: linear-gradient(135deg, rgba(23, 162, 184, 0.9), rgba(19, 132, 150, 0.9));
+            color: white;
+            border-left: 4px solid #0c5460;
         }
         
         .notification.warning {
-            background: #ffc107;
-            border-left: 5px solid #e0a800;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(224, 168, 0, 0.9));
             color: #212529;
+            border-left: 4px solid #d39e00;
         }
         
         .notification-icon {
-            margin-right: 10px;
-            font-size: 20px;
+            font-size: 1.25rem;
         }
         
         .notification-close {
-            margin-left: 15px;
+            margin-left: 1rem;
             cursor: pointer;
             font-weight: bold;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        
+        .notification-close:hover {
+            opacity: 1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .detail-container {
+                padding: 2rem;
+                margin: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .detail-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .detail-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .detail-label {
+                width: 100%;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .detail-container {
+                padding: 1.25rem;
+            }
+
+            .detail-section {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -178,71 +381,82 @@ try {
     ?>
 
     <div class="detail-container">
-        <h1>Request Details <small>(<?php echo htmlspecialchars($request['tracking_id']); ?>)</small></h1>
+        <div class="detail-header">
+            <h1>Request Details <small>(<?php echo htmlspecialchars($request['tracking_id']); ?>)</small></h1>
+            <span class="status-badge status-<?php echo strtolower($request['status']); ?>">
+                <i class="bi 
+                    <?php 
+                        switch(strtolower($request['status'])) {
+                            case 'pending': echo 'bi-clock'; break;
+                            case 'approved': echo 'bi-check-circle'; break;
+                            case 'rejected': echo 'bi-x-circle'; break;
+                            case 'reviewed': echo 'bi-eye'; break;
+                            case 'resolved': echo 'bi-check-circle'; break;
+                            case 'assigned': echo 'bi-person'; break;
+                            case 'processing': echo 'bi-gear'; break;
+                            default: echo 'bi-info-circle';
+                        }
+                    ?>
+                "></i>
+                <?php echo htmlspecialchars($request['status']); ?>
+            </span>
+        </div>
         
         <div class="detail-section">
-            <h3>Basic Information</h3>
+            <h3><i class="bi bi-card-heading"></i> Basic Information</h3>
             <div class="detail-row">
-                <div class="detail-label">Request Date:</div>
+                <div class="detail-label"><i class="bi bi-calendar"></i> Request Date:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['date_requested']); ?></div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Status:</div>
-                <div class="detail-value">
-                    <span class="status-badge status-<?php echo strtolower($request['status']); ?>">
-                        <?php echo htmlspecialchars($request['status']); ?>
-                    </span>
-                </div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Requester Type:</div>
+                <div class="detail-label"><i class="bi bi-person-badge"></i> Requester Type:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['requester_type']); ?></div>
             </div>
         </div>
 
         <div class="detail-section">
-            <h3>Request Details</h3>
+            <h3><i class="bi bi-file-text"></i> Request Details</h3>
             <div class="detail-row">
-                <div class="detail-label">Data Description:</div>
+                <div class="detail-label"><i class="bi bi-text-paragraph"></i> Data Description:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['description']); ?></div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Specific Fields:</div>
+                <div class="detail-label"><i class="bi bi-list-check"></i> Specific Fields:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['specific_fields']); ?></div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Period:</div>
+                <div class="detail-label"><i class="bi bi-calendar-range"></i> Period:</div>
                 <div class="detail-value">
                     <?php echo htmlspecialchars($request['period_from']); ?> to <?php echo htmlspecialchars($request['period_to']); ?>
                 </div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Purpose:</div>
+                <div class="detail-label"><i class="bi bi-question-circle"></i> Purpose:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['request_purpose']); ?></div>
             </div>
         </div>
 
         <div class="detail-section">
-            <h3>Requester Information</h3>
+            <h3><i class="bi bi-person-lines-fill"></i> Requester Information</h3>
             <div class="detail-row">
-                <div class="detail-label">Full Name:</div>
+                <div class="detail-label"><i class="bi bi-person"></i> Full Name:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['fullnames']); ?></div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Email:</div>
+                <div class="detail-label"><i class="bi bi-envelope"></i> Email:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['email']); ?></div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">Phone:</div>
+                <div class="detail-label"><i class="bi bi-telephone"></i> Phone:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['phone_number']); ?></div>
             </div>
             <div class="detail-row">
-                <div class="detail-label">KRA PIN:</div>
+                <div class="detail-label"><i class="bi bi-credit-card"></i> KRA PIN:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['kra_pin']); ?></div>
             </div>
             <?php if ($request['requester_affiliation_name']): ?>
             <div class="detail-row">
-                <div class="detail-label">Affiliation:</div>
+                <div class="detail-label"><i class="bi bi-building"></i> Affiliation:</div>
                 <div class="detail-value"><?php echo htmlspecialchars($request['requester_affiliation_name']); ?></div>
             </div>
             <?php endif; ?>
@@ -250,9 +464,13 @@ try {
 
         <div class="action-buttons">
             <?php if (strtolower($request['status']) === 'pending'): ?>
-                <a href="edit-request.php?id=<?php echo $requestId; ?>" class="btn btn-primary">Edit Request</a>
+                <a href="edit-request.php?id=<?php echo $requestId; ?>" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Edit Request
+                </a>
             <?php endif; ?>
-            <a href="dashboard.php" class="btn btn-secondary">Back to Dashboard</a>
+            <a href="dashboard.php" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
     </div>
 
@@ -269,12 +487,12 @@ try {
             
             // Set icon based on type
             const icons = {
-                success: '✓',
-                error: '✗',
-                info: 'ℹ',
-                warning: '⚠'
+                success: '<i class="bi bi-check-circle-fill"></i>',
+                error: '<i class="bi bi-x-circle-fill"></i>',
+                info: '<i class="bi bi-info-circle-fill"></i>',
+                warning: '<i class="bi bi-exclamation-triangle-fill"></i>'
             };
-            notificationIcon.textContent = icons[type] || '';
+            notificationIcon.innerHTML = icons[type] || '';
             
             // Set message
             notificationMessage.textContent = message;
@@ -289,12 +507,6 @@ try {
             
             // Manual close handler
             document.getElementById('notificationClose').onclick = function() {
-                clearTimeout(autoHide);
-                notification.classList.remove('show');
-            };
-            
-            // Click anywhere to dismiss
-            notification.onclick = function() {
                 clearTimeout(autoHide);
                 notification.classList.remove('show');
             };

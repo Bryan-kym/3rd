@@ -1,30 +1,36 @@
 <?php
-// api/logout.php
 session_start();
 require_once '../config.php';
+require_once '../auth.php';
+
+header('Content-Type: application/json');
 
 try {
-    // Get token from header
-    $headers = getallheaders();
-    $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : null;
+    // Verify the request has a valid token
+    $userId = authenticate();
     
-    if ($token) {
-        // Delete session from database
-        $stmt = $conn->prepare("DELETE FROM ext_sessions WHERE token = ?");
-        $stmt->bind_param("s", $token);
-        $stmt->execute();
+    // Destroy the session
+    $_SESSION = array();
+    
+    // Delete session cookie
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
+        );
     }
     
-    // Clear session
-    session_unset();
     session_destroy();
     
-    // Set logout message
-    $_SESSION['auth_message'] = 'You have been successfully logged out.';
-    $_SESSION['auth_message_type'] = 'success';
+    echo json_encode(['success' => true, 'message' => 'Logged out successfully']);
     
-    echo json_encode(['success' => true]);
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
