@@ -30,4 +30,5 @@ $documents_file_path = $_SERVER['DOCUMENTS_FILE_PATH'];
 
 $uploadDir = $_SERVER['DOCUMENTS_UPLOAD_PATH'];
 $uploadpath = $_SERVER['DOCUMENTS_FILE_PATH'];
+$trackingID = '';
 

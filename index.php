@@ -1,129 +1,108 @@
-<?php include 'header.php'; ?>
+<?php
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-<div class="container mt-5 w-50">
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Non-Disclosure Agreement</h3>
-            <p>Please read and agree to the following NDA terms to proceed.</p>
+// Check if user is already logged in
+if (isset($_SESSION['authToken'])) {
+    header("Location: dashboard.php");
+    exit();
+}
 
-            <!-- NDA Text -->
-            <div class="mb-4" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-                <p><strong>Non-Disclosure Agreement (NDA)</strong></p>
-                <p>This Agreement is made between [Organization Name] and the user. By agreeing to this NDA, you commit not to disclose any proprietary or confidential information shared by [Organization Name] during the course of this application.</p>
-                <p>Your acceptance of these terms is required to proceed with the request for information. This NDA is legally binding and will be enforceable in accordance with the laws of the applicable jurisdiction.</p>
-                <p>By typing your name in the box below and clicking "I Agree," you confirm your consent to the terms outlined in this agreement.</p>
-            </div>
+// Store the intended redirect URL in session
+$_SESSION['post_login_redirect'] = 'dashboard.php';
+?>
 
-            <!-- Signature Input and Agreement Checkbox -->
-            <form id="ndaForm">
-                <div class="form-group">
-                    <label for="signature">Type your name as a signature</label>
-                    <input type="text" class="form-control" id="signature" required>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="agreement" required>
-                    <label class="form-check-label" for="agreement">I agree to the terms and conditions of this NDA</label>
-                </div>
-                <button type="button" id="nextBtn" class="btn btn-primary float-right mt-3" disabled>Next</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.getElementById('ndaForm').addEventListener('input', function() {
-        const signature = document.getElementById('signature').value.trim();
-        const agreement = document.getElementById('agreement').checked;
-        document.getElementById('nextBtn').disabled = !(signature && agreement);
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', async function() {
-        const name = document.getElementById('signature').value.trim();
-
-        // Fetch the Base64 image from PHP script
-        const imageResponse = await fetch('image_encode.php');
-        const imageData = await imageResponse.text(); // The Base64 image strings
-
-        // Create a new PDF
-        const {
-            jsPDF
-        } = window.jspdf;
-        const pdf = new jsPDF();
-
-        // Add CONFIDENTIAL tag
-        pdf.setFont("Georgia", "bold");
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0); // Red color for emphasis
-        pdf.text("PUBLIC", pdf.internal.pageSize.width - 10, 10, {
-            align: "right"
-        });
-
-        // Get today's date
-        const today = new Date();
-
-        // Format the date to YYYY-MM-DD
-        const formattedDate = today.toISOString().split('T')[0];
-
-        // Add image to the header (centered on the page)
-        const imgWidth = 90; // Width of the image
-        const imgHeight = 23; // Height of the image
-        const pageWidth = pdf.internal.pageSize.width;
-        const xPos = (pageWidth - imgWidth) / 2; // Center the image horizontally
-
-        pdf.addImage(imageData, 'PNG', xPos, 12, imgWidth, imgHeight); // Adjust the Y position for the image
-
-        // Add NDA content below the image
-        pdf.setFont("Arial", "normal");
-        pdf.setFontSize(12);
-        pdf.setTextColor(0, 0, 0); // Black color for text
-        pdf.text("Terms of the Agreement", 10, 50);
-        pdf.text("This Non-Disclosure Agreement (hereinafter referred to as the “Agreement”) is entered into on " + formattedDate, 10, 60);
-        pdf.text("by and between:", 10, 70);
-        pdf.text("1. Kenya Revenue Authority (KRA), a State Corporation in the Republic of Kenya, duly incorporated under the ", 10, 80);
-        pdf.text("Kenya Revenue Authority Act (Cap. 469) of the Laws of Kenya and whose registered office is situated at Times Tower,", 10, 90);
-        pdf.text("Haile Selassie Avenue and of P.O. Box 48240 – 00100, Nairobi (hereinafter referred to as “KRA” which expression shall", 10, 100);
-        pdf.text("where the context so admits include its successors and assigns) of the one part; (hereinafter referred to as the", 10, 110);
-        pdf.text("(“Disclosing Party”) and", 10, 120);
-        pdf.text("2. [Receiving Party's Name] with an address of [Receiving Party's Address] (hereinafter referred to as the", 10, 130);
-        pdf.text("\"Receiving Party\") (collectively referred to as the “Parties”).", 10, 140);
-
-
-        // Add footer
-        pdf.setFont("Georgia", "bold");
-        pdf.setFontSize(16);
-        pdf.setTextColor(255, 0, 0); // Black color for text
-        pdf.text("Tulipe Ushuru, Tijitegemee!", 80, 288);
-
-        // Convert PDF to Base64
-        const pdfData = pdf.output('datauristring').split(',')[1];
-
-        // Send the PDF to the server
-        try {
-            const response = await fetch('save_pdf.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    pdf: pdfData,
-                    name
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                localStorage.setItem('uploadedFilePath', data.filePath);
-                // Assuming you got the JSON response in a variable called responseData:
-                localStorage.setItem('nda_form', data.nda_form);
-                window.location.href = 'options.php'; // Redirect to Step 2
-            } else {
-                throw new Error(data.message || 'Failed to save PDF');
-            }
-        } catch (error) {
-            console.error('Error creating NDA:', error);
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | Redirecting...</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
-    });
-</script>
+        .redirect-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            width: 100px;
+            margin-bottom: 1.5rem;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        .loader {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .login-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .login-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-container">
+        <!-- Replace with your actual logo -->
+        <img src="assets/images/favicon.ico" alt="App Logo" class="logo">
+        
+        <h1>Kenya Revenue Authority</h1>
+        <p>You're being automatically redirected to the login page</p>
+        
+        <div class="loader"></div>
+        
+        <p>If you're not redirected automatically, please click below:</p>
+        <a href="login.html" class="login-link">Go to Login Page</a>
+    </div>
 
-
-<?php include 'footer.php'; ?>
+    <!-- JavaScript for smooth redirect -->
+    <script>
+        // Redirect after 3 seconds
+        setTimeout(function() {
+            window.location.href = "login.html";
+        }, 1000);
+        
+        // Optional: Check if user is already logged in via localStorage
+        if (localStorage.getItem('authToken')) {
+            window.location.href = "dashboard.php";
+        }
+    </script>
+</body>
+</html>

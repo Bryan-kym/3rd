@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 alert("Submission successful!");
                 localStorage.clear();
-                window.location.href = "index.php";
+                window.location.href = "request.php";
             } else {
                 alert("Error submitting data: " + data.error);
             }

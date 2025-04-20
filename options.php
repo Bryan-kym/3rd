@@ -1,4 +1,22 @@
-<?php include 'header.php'; ?>
+<?php
+ob_start();
+require_once 'auth.php';
+include 'header.php';
+
+try {
+    $userId = authenticate(); // This will redirect if not authenticated
+    
+    // Check if coming from request.php by checking for nda_form in localStorage
+    // We'll verify this in the JavaScript since PHP can't directly check localStorage
+} catch (Exception $e) {
+    header('Location: login.html?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    exit;
+}
+
+// Get token from session or headers
+$token = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : 
+         (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : '');
+?>
 
 <div class="container mt-5 w-50">
     <div class="card">
@@ -6,7 +24,7 @@
             <h3 class="card-title">Select Your Category</h3>
             <p>Please choose your category from the options below.</p>
 
-            <!-- Category Selection Form s-->
+            <!-- Category Selection Form -->
             <form id="step2Form">
                 <div class="row">
                     <!-- Radio Buttons Styled as Buttons -->
@@ -34,10 +52,6 @@
                         <input class="btn-check" type="radio" name="category" id="publiccompany" value="publiccompany" required>
                         <label class="btn btn-outline-primary w-100" for="publiccompany">Public Company</label>
                     </div>
-                    <!-- <div class="col-12 mb-3">
-                        <input class="btn-check" type="radio" name="category" id="others" value="others" required>
-                        <label class="btn btn-outline-primary w-100" for="others">Others</label>
-                    </div> -->
                 </div>
 
                 <!-- Conditional Text Input for "Others" -->
@@ -55,60 +69,115 @@
 </div>
 
 <script>
-// Enable 'Next' button based on category selection and description input
-document.querySelectorAll('input[name="category"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-        const nextBtn = document.getElementById('nextBtn');
+     // Add Font Awesome (if not already loaded)
+     document.addEventListener('DOMContentLoaded', function() {
+        // Other option toggle
+        const otherRadio = document.getElementById('other');
         const otherDescription = document.getElementById('otherDescription');
-
-        // Store selected category in localStorage
-        localStorage.setItem('selectedCategory', this.value);
-
-        if (this.value === 'others') {
-            otherDescription.style.display = 'block';
-            checkDescription(); // Check if description is valid
-        } else {
-            otherDescription.style.display = 'none';
-            document.getElementById('description').value = ''; // Clear description field if hidden
-            nextBtn.disabled = false; // Enable Next button for other categories
+        
+        document.querySelectorAll('input[name="category"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                otherDescription.style.display = this.id === 'other' ? 'block' : 'none';
+                document.getElementById('nextBtn').disabled = !this.checked;
+            });
+        });
+        
+        // Character count for description
+        const description = document.getElementById('description');
+        const charCount = document.getElementById('charCount');
+        
+        if (description) {
+            description.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
         }
     });
-});
+    // Store token in localStorage if it came from session
+    const token = '<?php echo $token; ?>';
+    if (token && !localStorage.getItem('authToken')) {
+        localStorage.setItem('authToken', token);
+    }
 
-// Check if description is valid
-document.getElementById('description').addEventListener('input', checkDescription);
+    // Check if coming from request.php by verifying nda_form exists in localStorage
+    window.addEventListener('load', async function() {
+        if (!localStorage.getItem('authToken') || !localStorage.getItem('nda_form')) {
+            // If no token or not coming from request.php, redirect to dashboard
+            window.location.href = 'dashboard.php';
+            return;
+        }
 
-function checkDescription() {
-    const nextBtn = document.getElementById('nextBtn');
-    const description = document.getElementById('description').value;
+        // Validate token with server
+        try {
+            const response = await fetch('api/validate-token.php', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            });
 
-    // Enable Next button only if description is provided
-    nextBtn.disabled = description.trim() === '' || description.length > 200;
-}
+            if (!response.ok) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('nda_form');
+                window.location.href = 'login.html';
+            }
+        } catch (error) {
+            console.error('Token validation error:', error);
+            window.location.href = 'login.html';
+        }
+    });
 
-// Handle navigation to the next or previous steps
-document.getElementById('nextBtn').addEventListener('click', function() {
-    // Save the description in localStorage if the category is "Others"
-    const selectedCategory = localStorage.getItem('selectedCategory');
-    if (selectedCategory === 'others') {
+    // Enable 'Next' button based on category selection and description input
+    document.querySelectorAll('input[name="category"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const nextBtn = document.getElementById('nextBtn');
+            const otherDescription = document.getElementById('otherDescription');
+
+            // Store selected category in localStorage
+            localStorage.setItem('selectedCategory', this.value);
+
+            if (this.value === 'others') {
+                otherDescription.style.display = 'block';
+                checkDescription(); // Check if description is valid
+            } else {
+                otherDescription.style.display = 'none';
+                document.getElementById('description').value = ''; // Clear description field if hidden
+                nextBtn.disabled = false; // Enable Next button for other categories
+            }
+        });
+    });
+
+    // Check if description is valid
+    document.getElementById('description').addEventListener('input', checkDescription);
+
+    function checkDescription() {
+        const nextBtn = document.getElementById('nextBtn');
         const description = document.getElementById('description').value;
-        localStorage.setItem('description', description); // Save description if "Others" is selected
-    } else {
-        localStorage.removeItem('description'); // Clear description if not "Others"
+
+        // Enable Next button only if description is provided
+        nextBtn.disabled = description.trim() === '' || description.length > 200;
     }
 
-    // redirect to the next step
-    if (selectedCategory === 'taxagent') {
-        window.location.href = 'taxagent.php'; 
-    }else{
-        window.location.href = 'personal_information.php'; 
-    }
-    
-});
+    // Handle navigation to the next or previous steps
+    document.getElementById('nextBtn').addEventListener('click', async function() {
+        // Save the description in localStorage if the category is "Others"
+        const selectedCategory = localStorage.getItem('selectedCategory');
+        if (selectedCategory === 'others') {
+            const description = document.getElementById('description').value;
+            localStorage.setItem('description', description); // Save description if "Others" is selected
+        } else {
+            localStorage.removeItem('description'); // Clear description if not "Others"
+        }
 
-document.getElementById('backBtn').addEventListener('click', function() {
-    window.location.href = 'index.php'; // Redirect back to Step 1
-});
+        // redirect to the next step
+        if (selectedCategory === 'taxagent') {
+            window.location.href = 'taxagent.php';
+        } else {
+            window.location.href = 'personal_information.php';
+        }
+    });
+
+    document.getElementById('backBtn').addEventListener('click', function() {
+        window.location.href = 'request.php'; // Redirect back to Step 1
+    });
 </script>
 
 <?php include 'footer.php'; ?>

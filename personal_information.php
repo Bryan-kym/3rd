@@ -1,25 +1,28 @@
 <?php
-session_start();
+ob_start();
+require_once 'auth.php';
 include 'header.php';
+
+ob_start();
+require_once 'auth.php';
+include 'header.php';
+
+try {
+    $userId = authenticate();
+    $token = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : '');
+} catch (Exception $e) {
+    header('Location: login.html?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    exit;
+}
 ?>
 
-<div class="container mt-5 w-50">
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Personal Information</h3>
-            <p>Please fill in your personal information below.</p>
-
-            <!-- Personal Information Form -->
-            <form id="step3Form">
-                <div class="form-group" id="kraPinField">
-                    <label for="kra_pin">KRA PIN</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="kra_pin" name="kra_pin">
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-primary" id="verifyKraPinBtn">Verify</button>
-                        </div>
-                    </div>
-                    <p id="kraPinError" class="text-danger"></p>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pt-4 pb-1">
+                    <h3 class="card-title text-center text-primary mb-1">Personal Information</h3>
+                    <p class="text-muted text-center mb-0">Please complete your personal details</p>
                 </div>
 
                 <!-- Wrap the rest of the form fields in a div -->
@@ -76,19 +79,97 @@ include 'header.php';
     </div>
 </div>
 
-
 <script>
-    // Select required input fields and the 'Next' button
-    const requiredFields = document.querySelectorAll('#step3Form input[required]');
-    const nextBtn = document.getElementById('nextBtn');
-
-    // Function to check if all required fields are filled
-    function checkFormCompletion() {
-        const allFilled = Array.from(requiredFields).every(field => field.value.trim() !== '');
-        nextBtn.disabled = !allFilled;
+    // Store token in localStorage if it came from session
+    const token = '<?php echo $token; ?>';
+    if (token && !localStorage.getItem('authToken')) {
+        localStorage.setItem('authToken', token);
     }
 
-    // Function to save form data to localStorage
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Check if coming from proper flow
+        if (!localStorage.getItem('authToken') ||
+            !localStorage.getItem('nda_form') ||
+            !localStorage.getItem('selectedCategory')) {
+            window.location.href = 'dashboard.php';
+            return;
+        }
+
+        try {
+            // Validate token with server
+            const tokenResponse = await fetch('api/validate-token.php', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            });
+
+            if (!tokenResponse.ok) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('nda_form');
+                localStorage.removeItem('selectedCategory');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Fetch and populate user data
+            await fetchUserData();
+
+            // Load any previously saved form data
+            loadFormData();
+
+        } catch (error) {
+            console.error('Initialization error:', error);
+            window.location.href = 'login.html';
+        }
+    });
+
+    async function fetchUserData() {
+        try {
+            const response = await fetch('api/get_user_data.php', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const userData = result.data;
+                document.getElementById('kra_pin').value = userData.kra_pin || '';
+                document.getElementById('surname').value = userData.surname || '';
+                document.getElementById('othernames').value = userData.othernames || '';
+                document.getElementById('email').value = userData.email || '';
+                document.getElementById('phone').value = userData.phone || '';
+
+                // Make email readonly since it's from registration
+                document.getElementById('email').readOnly = true;
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            showAlert('warning', 'Could not load your registration details. Please fill the form manually.');
+        }
+    }
+
+    function loadFormData() {
+        const savedData = localStorage.getItem('personalInfo');
+        if (savedData) {
+            try {
+                const formData = JSON.parse(savedData);
+                // Only load data if fields are empty
+                if (!document.getElementById('surname').value) document.getElementById('surname').value = formData.surname || '';
+                if (!document.getElementById('othernames').value) document.getElementById('othernames').value = formData.othernames || '';
+                if (!document.getElementById('kra_pin').value) document.getElementById('kra_pin').value = formData.kra_pin || '';
+                if (!document.getElementById('phone').value) document.getElementById('phone').value = formData.phone || '';
+            } catch (e) {
+                console.error('Error loading saved data:', e);
+            }
+        }
+    }
+
     function saveFormData() {
         const formData = {
             surname: document.getElementById('surname').value,
@@ -100,252 +181,63 @@ include 'header.php';
         localStorage.setItem('personalInfo', JSON.stringify(formData));
     }
 
-    // Function to load saved form data
-    function loadFormData() {
-        const savedData = localStorage.getItem('personalInfo');
-        if (savedData) {
-            const formData = JSON.parse(savedData);
-            document.getElementById('surname').value = formData.surname || '';
-            document.getElementById('othernames').value = formData.othernames || '';
-            document.getElementById('email').value = formData.email || '';
-            document.getElementById('phone').value = formData.phone || '';
-            document.getElementById('kra_pin').value = formData.kra_pin || '';
-
-            checkFormCompletion(); // Ensure 'Next' button updates
-        }
-    }
-
     function validateEmail(email) {
         const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         return regex.test(email);
     }
 
-    document.getElementById('email').addEventListener('blur', function() {
-        const email = this.value;
-        const emailHelp = document.getElementById('emailHelp');
-
-        if (!validateEmail(email)) {
-            emailHelp.textContent = "Please enter a valid email address.";
-            emailHelp.classList.remove('text-muted');
-            emailHelp.classList.add('text-danger');
-            this.classList.add('is-invalid');
-        } else {
-            emailHelp.textContent = "Email address is valid.";
-            emailHelp.classList.remove('text-danger');
-            emailHelp.classList.add('text-success');
-            this.classList.remove('is-invalid');
-        }
-    });
-
     function validatePhone(phone) {
-        // Check if the phone number is exactly 10 digits and contains only numbers
-        const regex = /^\d{10}$/;
+        // Basic international phone validation (with optional + and country code)
+        const regex = /^\+?[0-9\s\-]{10,15}$/;
         return regex.test(phone);
     }
 
-    document.getElementById('phone').addEventListener('blur', function() {
-        const phone = this.value;
-        const phoneHelp = document.getElementById('phoneHelp');
+    function showAlert(type, message) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = 'alert';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.querySelector('.card-body').prepend(alert);
+    }
 
-        if (!validatePhone(phone)) {
-            phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
-            phoneHelp.classList.remove('text-muted');
-            phoneHelp.classList.add('text-danger');
-            this.classList.add('is-invalid');
-        } else {
-            phoneHelp.textContent = "Phone number is valid.";
-            phoneHelp.classList.remove('text-danger');
-            phoneHelp.classList.add('text-success');
-            this.classList.remove('is-invalid');
-        }
-    });
-
-    // Load data on page load
+    // Initialize next button click handler after DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
-        const category = localStorage.getItem('selectedCategory');
-        if (category === 'student') {
-            document.getElementById('kraPinField').style.display = 'none';
-            document.getElementById('otherFields').style.display = 'block';
-            const otherFields = document.querySelectorAll('#otherFields input');
-            otherFields.forEach(field => field.disabled = false);
-        }
-        loadFormData(); // Load previously saved data
-    });
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
 
-    // Enable 'Next' button dynamically when typing
-    requiredFields.forEach(field => {
-        field.addEventListener('input', checkFormCompletion);
-    });
+            if (!validateEmail(email)) {
+                showAlert('danger', 'Please enter a valid email address.');
+                return;
+            }
 
-    // Save form data and send OTP when 'Next' is clicked
-    document.getElementById('nextBtn').addEventListener('click', function() {
-    // Validate email and phone number
-    const email = document.getElementById('email').value;
-    const phone = document.getElementById('phone').value;
-    const emailHelp = document.getElementById('emailHelp');
-    const phoneHelp = document.getElementById('phoneHelp');
+            if (!validatePhone(phone)) {
+                showAlert('danger', 'Please enter a valid phone number with country code.');
+                return;
+            }
 
-    let isValid = true;
+            saveFormData();
 
-    // Validate email
-    if (!validateEmail(email)) {
-        emailHelp.textContent = "Please enter a valid email address.";
-        emailHelp.classList.remove('text-muted');
-        emailHelp.classList.add('text-danger');
-        document.getElementById('email').classList.add('is-invalid');
-        isValid = false;
-    } else {
-        emailHelp.textContent = "Email address is valid.";
-        emailHelp.classList.remove('text-danger');
-        emailHelp.classList.add('text-success');
-        document.getElementById('email').classList.remove('is-invalid');
-    }
+            const category = localStorage.getItem('selectedCategory');
+            if (category === 'student' || category === 'researcher') {
+                window.location.href = 'institution_details.php';
+            } else if (category === 'privatecompany' || category === 'publiccompany') {
+                window.location.href = 'org.php';
+            } else {
+                window.location.href = 'data_request.php';
+            }
+        });
 
-    // Validate phone number
-    if (!validatePhone(phone)) {
-        phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
-        phoneHelp.classList.remove('text-muted');
-        phoneHelp.classList.add('text-danger');
-        document.getElementById('phone').classList.add('is-invalid');
-        isValid = false;
-    } else {
-        phoneHelp.textContent = "Phone number is valid.";
-        phoneHelp.classList.remove('text-danger');
-        phoneHelp.classList.add('text-success');
-        document.getElementById('phone').classList.remove('is-invalid');
-    }
-
-    // If email or phone is invalid, stop further execution
-    if (!isValid) {
-        return;
-    }
-
-    // Save form data and proceed with OTP request
-    saveFormData(); // Ensure data is saved before proceeding
-
-    fetch('send_otp.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'email=' + encodeURIComponent(email)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === "success") {
-            $('#otpModal').modal('show'); // Open OTP modal
-        } else {
-            alert("Error sending OTP. Try again.");
-        }
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-    // OTP Verification
-    document.getElementById('verifyOtpBtn').addEventListener('click', function() {
-        let email = document.getElementById('email').value;
-        let otp = document.getElementById('otpInput').value;
-
-        fetch('verify_otp.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    $('#otpModal').modal('hide'); // Close OTP modal
-
-                    // Redirect based on category
-                    const category = localStorage.getItem('selectedCategory');
-                    if (category === 'student' || category === 'researcher') {
-                        window.location.href = 'institution_details.php';
-                    } else if (category === 'privatecompany' || category === 'publiccompany') {
-                        window.location.href = 'org.php';
-                    } else {
-                        window.location.href = 'data_request.php';
-                    }
-
-                } else {
-                    document.getElementById('otpError').innerText = data.message;
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    });
-
-    // Resend OTP
-    document.getElementById('resendOtpBtn').addEventListener('click', function() {
-        let email = document.getElementById('email').value;
-
-        fetch('send_otp.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'email=' + encodeURIComponent(email)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    alert("A new OTP has been sent.");
-                } else {
-                    alert("Error resending OTP. Try again.");
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    });
-
-    // Handle 'Back' button click - Save data and go back
-    document.getElementById('backBtn').addEventListener('click', function() {
-        saveFormData(); // Save input before navigating back
-        window.location.href = 'options.php';
-    });
-
-
-
-
-    document.getElementById('verifyKraPinBtn').addEventListener('click', function() {
-        const kraPin = document.getElementById('kra_pin').value;
-        const kraPinError = document.getElementById('kraPinError');
-
-        // Validate KRA PIN (basic check for empty input)
-        if (!kraPin) {
-            kraPinError.innerText = "Please enter a KRA PIN.";
-            return;
-        }
-
-        // Send KRA PIN to the server for validation
-        fetch('validate_kra_pin.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'kra_pin=' + encodeURIComponent(kraPin)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    kraPinError.innerText = ""; // Clear any previous error
-                    document.getElementById('otherFields').style.display = 'block'; // Show other fields
-
-                    // Enable all other fields
-                    const otherFields = document.querySelectorAll('#otherFields input');
-                    otherFields.forEach(field => field.disabled = false);
-
-                    // Enable the 'Next' button if all required fields are filled
-                    checkFormCompletion();
-                } else {
-                    kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                kraPinError.innerText = "An error occurred. Please try again.";
-            });
+        document.getElementById('backBtn').addEventListener('click', function() {
+            saveFormData();
+            window.location.href = 'options.php';
+        });
     });
 </script>
 
-
-<?php include 'footer.php'; ?>
+<?php
+ob_flush();
+include 'footer.php';
