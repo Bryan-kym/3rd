@@ -3,6 +3,10 @@ ob_start();
 require_once 'auth.php';
 include 'header.php';
 
+ob_start();
+require_once 'auth.php';
+include 'header.php';
+
 try {
     $userId = authenticate();
     $token = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : '');
@@ -20,133 +24,60 @@ try {
                     <h3 class="card-title text-center text-primary mb-1">Personal Information</h3>
                     <p class="text-muted text-center mb-0">Please complete your personal details</p>
                 </div>
-                
-                <div class="card-body px-5 pt-4 pb-5">
-                    <form id="step3Form" class="needs-validation" novalidate>
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" id="surname" name="surname" 
-                                           placeholder=" " required readonly>
-                                    <label for="surname" class="form-label">Surname</label>
-                                    <div class="invalid-feedback">Please enter your surname</div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" id="othernames" name="othernames" 
-                                           placeholder=" " required readonly>
-                                    <label for="othernames" class="form-label">Other Names</label>
-                                    <div class="invalid-feedback">Please enter your other names</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-floating mb-4">
-                            <input type="email" class="form-control" id="email" name="email" 
-                                   placeholder=" " required readonly>
-                            <label for="email" class="form-label">Email Address</label>
-                        </div>
-                        
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <div class="form-floating">
-                                    <input type="tel" class="form-control" id="phone" name="phone" 
-                                           placeholder=" " required readonly>
-                                    <label for="phone" class="form-label">Phone Number</label>
-                                    <div class="invalid-feedback">Please enter a valid phone number</div>
-                                    <small class="text-muted mt-1 d-block">Include country code (e.g. +254712345678)</small>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" id="kra_pin" name="kra_pin" 
-                                           placeholder=" " required readonly>
-                                    <label for="kra_pin" class="form-label">KRA PIN</label>
-                                    <div class="invalid-feedback">Please enter your KRA PIN</div>
-                                    <small class="text-muted mt-1 d-block">Format: A123456789X</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between mt-5">
-                            <button type="button" id="backBtn" class="btn btn-outline-secondary px-4 py-2">
-                                <i class="fas fa-arrow-left me-2"></i>Back
-                            </button>
-                            <button type="button" id="nextBtn" class="btn btn-primary px-4 py-2">
-                                Next <i class="fas fa-arrow-right ms-2"></i>
-                            </button>
-                        </div>
-                    </form>
+
+                <!-- Wrap the rest of the form fields in a div -->
+                <div id="otherFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="surname">Surname</label>
+                        <input type="text" class="form-control" id="surname" name="surname" required disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="othernames">Other Names</label>
+                        <input type="text" class="form-control" id="othernames" name="othernames" required disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required disabled>
+                        <small id="emailHelp" class="form-text text-muted">Please enter a valid email address.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}" required disabled>
+                        <small id="phoneHelp" class="form-text text-muted">Please enter a 10-digit phone number.</small>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Navigation Buttons -->
+                <button type="button" id="backBtn" class="btn btn-secondary">Back</button>
+                <button type="button" id="nextBtn" class="btn btn-primary float-right" disabled>Next</button>
+            </form>
         </div>
     </div>
 </div>
 
-<style>
-    /* Custom styling for the form */
-    .card {
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    
-    .card-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    }
-    
-    .form-control {
-        border: 1px solid #ced4da;
-        transition: all 0.3s;
-        height: calc(3.5rem + 2px);
-        padding-top: 1.625rem;
-    }
-    
-    .form-control:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
-    }
-    
-    .form-floating label {
-        color: #6c757d;
-        transition: all 0.2s;
-    }
-    
-    .form-floating>.form-control:focus~label,
-    .form-floating>.form-control:not(:placeholder-shown)~label {
-        transform: scale(0.85) translateY(-0.8rem) translateX(0.15rem);
-        opacity: 0.8;
-    }
-    
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.3s;
-    }
-    
-    .btn-primary {
-        background-color: #d9232e;
-        border-color:#d9232e;
-    }
-    
-    .btn-primary:hover {
-        background-color: #d9232e;
-        border-color: #d9232e;
-    }
-    
-    .btn-outline-secondary:hover {
-        background-color: #f8f9fa;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .card-body {
-            padding: 1.5rem;
-        }
-    }
-</style>
+<!-- OTP Modal -->
+<div class="modal fade" id="otpModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Verify Your Email</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>An OTP has been sent to your email. Please enter it below:</p>
+                <input type="text" class="form-control" id="otpInput" placeholder="Enter OTP">
+                <p id="otpError" class="text-danger"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="resendOtpBtn">Resend OTP</button>
+                <button type="button" class="btn btn-primary" id="verifyOtpBtn">Verify OTP</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     // Store token in localStorage if it came from session
