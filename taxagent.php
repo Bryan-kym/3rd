@@ -1,127 +1,282 @@
 <?php
 include 'header.php'; 
-require_once 'auth.php'; // Include your authentication functions
+require_once 'auth.php';
 
-// Check if user is authenticated
 try {
-    $userId = authenticate(); // This will redirect if not authenticated
-    
-    // Get token from session or headers
+    $userId = authenticate();    
     $token = isset($_SESSION['authToken']) ? $_SESSION['authToken'] : 
              (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : '');
 } catch (Exception $e) {
-    // Redirect to login if not authenticated
     header('Location: login.html?redirect=' . urlencode($_SERVER['REQUEST_URI']));
     exit;
 }
 ?>
 
-<div class="container mt-5 w-50">
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Tax Agent Information</h3>
-            <p>Please fill in your information below.</p>
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .form-header h2 {
+        color: #d9232e;
+        font-weight: 600;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border-left: 4px solid #d9232e;
+    }
+    
+    .form-section h4 {
+        color: #333;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+    }
+    
+    .input-group-verify .btn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        min-width: 100px;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #eee;
+    }
+    
+    .btn-primary {
+        background-color: #d9232e;
+        border-color: #d9232e;
+    }
+    
+    .btn-primary:hover {
+        background-color: #a51b24;
+        border-color: #a51b24;
+    }
+    
+    .btn-outline-primary {
+        color: #d9232e;
+        border-color: #d9232e;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #d9232e;
+        color: white;
+    }
+    
+    .form-feedback {
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-feedback.valid {
+        color: #28a745;
+    }
+    
+    .form-feedback.invalid {
+        color: #dc3545;
+    }
+    
+    .otp-modal .modal-header {
+        background-color: #d9232e;
+        color: white;
+        border-radius: 0;
+    }
+    
+    .otp-modal .modal-content {
+        border-radius: 0;
+    }
+    
+    .otp-modal .modal-footer {
+        justify-content: space-between;
+    }
+    
+    .btn-spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top: 2px solid white;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .additional-fields {
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+</style>
 
-            <!-- Personal Information Form -->
-            <form id="step3Form">
-                <!-- Dropdown to select Individual or Organization -->
-                <div class="form-group">
-                    <label for="userType">Are you an Individual or representing an Organization? Choose from the options below</label>
-                    <select class="form-control" id="userType" name="userType" required>
-                        <option value="individual">Individual</option>
-                        <option value="organization">Organization</option>
-                    </select>
-                </div>
-
-                <!-- Fields for Individual -->
-                <div id="individualFields">
-                    <div class="form-group" id="kraPinField">
-                        <label for="kra_pin">KRA PIN</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="kra_pin" name="kra_pin">
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-primary" id="verifyPinBtn">Verify</button>
-                            </div>
-                        </div>
-                        <p id="kraPinError" class="text-danger"></p>
+<div class="form-container">
+    <div class="form-header">
+        <h2>Tax Agent Registration</h2>
+        <p class="text-muted">Complete your profile information to proceed</p>
+    </div>
+    
+    <form id="step3Form">
+        <div class="form-section">
+            <h4>Account Type</h4>
+            <div class="form-group">
+                <label for="userType">I am registering as:</label>
+                <select class="form-control" id="userType" name="userType" required>
+                    <option value="">Select account type</option>
+                    <option value="individual">Individual Tax Agent</option>
+                    <option value="organization">Organization Representative</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="individualFields" class="form-section additional-fields" style="display: block;">
+            <h4>Personal Information</h4>
+            
+            <div class="form-group">
+                <label for="kra_pin">KRA PIN</label>
+                <div class="input-group input-group-verify">
+                    <input type="text" class="form-control" id="kra_pin" name="kra_pin" placeholder="A123456789X">
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-primary" id="verifyPinBtn">
+                            Verify
+                            <span class="btn-spinner" id="verifyPinSpinner"></span>
+                        </button>
                     </div>
-
-                    <div id="otherFields" style="display: none;">
+                </div>
+                <div id="kraPinFeedback" class="form-feedback"></div>
+            </div>
+            
+            <div id="otherFields" class="additional-fields" style="display: block;">
+                <div class="row">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="surname">Surname</label>
                             <input type="text" class="form-control" id="surname" name="surname" required>
                         </div>
+                    </div>
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="othernames">Other Names</label>
                             <input type="text" class="form-control" id="othernames" name="othernames" required>
                         </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
                         <div class="form-group">
-                            <label for="email">Email</label>
+                            <label for="email">Email Address</label>
                             <input type="email" class="form-control" id="email" name="email" required>
-                            <small id="emailHelp" class="form-text text-muted">Please enter a valid email address.</small>
+                            <div id="emailFeedback" class="form-feedback">Please enter a valid email address</div>
                         </div>
+                    </div>
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
                             <input type="tel" class="form-control" id="phone" name="phone" required>
-                            <small id="phoneHelp" class="form-text text-muted">Please enter a 10-digit phone number.</small>
+                            <div id="phoneFeedback" class="form-feedback">Please enter a 10-digit phone number</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Fields for Organization (Hidden initially) -->
-                <div id="organizationFields" style="display: none;">
-                    <div class="form-group" id="kraPinField">
-                        <label for="orgKraPin">Organization KRA PIN</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="orgKraPin" name="orgKraPin">
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-primary" id="verifyKraPinBtn">Verify</button>
-                            </div>
-                        </div>
-                        <p id="kraPinError" class="text-danger"></p>
+            </div>
+        </div>
+        
+        <div id="organizationFields" class="form-section additional-fields" style="display: none;">
+            <h4>Organization Information</h4>
+            
+            <div class="form-group">
+                <label for="orgKraPin">Organization KRA PIN</label>
+                <div class="input-group input-group-verify">
+                    <input type="text" class="form-control" id="orgKraPin" name="orgKraPin" placeholder="P123456789X">
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-primary" id="verifyKraPinBtn">
+                            Verify
+                            <span class="btn-spinner" id="verifyOrgSpinner"></span>
+                        </button>
                     </div>
-                    <div id="otherFieldsorg" style="display: none;">
-                        <div class="form-group">
-                            <label for="orgName">Organization Name</label>
-                            <input type="text" class="form-control" id="orgName" name="orgName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="orgPhone">Organization Phone Number</label>
-                            <input type="tel" class="form-control" id="orgPhone" name="orgPhone" required>
-                            <small id="phoneHelporg" class="form-text text-muted">Please enter a 10-digit phone number.</small>
-                        </div>
+                </div>
+                <div id="orgKraPinFeedback" class="form-feedback"></div>
+            </div>
+            
+            <div id="otherFieldsorg" class="additional-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="orgName">Organization Name</label>
+                    <input type="text" class="form-control" id="orgName" name="orgName" required>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="orgEmail">Organization Email</label>
                             <input type="email" class="form-control" id="orgEmail" name="orgEmail" required>
-                            <small id="emailHelporg" class="form-text text-muted">Please enter a valid email address.</small>
+                            <div id="orgEmailFeedback" class="form-feedback">Please enter a valid email address</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="orgPhone">Organization Phone</label>
+                            <input type="tel" class="form-control" id="orgPhone" name="orgPhone" required>
+                            <div id="orgPhoneFeedback" class="form-feedback">Please enter a 10-digit phone number</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Navigation Buttons -->
-                <button type="button" id="backBtn" class="btn btn-secondary">Back</button>
-                <button type="button" id="nextBtn" class="btn btn-primary float-right" disabled>Next</button>
-            </form>
+            </div>
         </div>
-    </div>
+        
+        <div class="form-actions">
+            <button type="button" id="backBtn" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left mr-2"></i> Back
+            </button>
+            <button type="button" id="nextBtn" class="btn btn-primary" disabled>
+                Continue <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </form>
 </div>
 
-<!-- OTP Verification Modal -->
-<div class="modal fade" id="otpModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+<div class="modal fade otp-modal" id="otpModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Verify Your Email</h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h5 class="modal-title">Email Verification</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
-                <p>An OTP has been sent to your email. Please enter it below:</p>
-                <input type="text" class="form-control" id="otpInput" placeholder="Enter OTP">
-                <p id="otpError" class="text-danger"></p>
+                <p>We've sent a 6-digit verification code to <strong id="otpEmail"></strong>. Please enter it below:</p>
+                <div class="form-group">
+                    <input type="text" class="form-control form-control-lg text-center" id="otpInput" placeholder="••••••" maxlength="6">
+                    <div id="otpError" class="form-feedback invalid"></div>
+                </div>
+                <p class="small text-muted">Didn't receive the code? <a href="#" id="resendOtpLink">Resend code</a></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="resendOtpBtn">Resend OTP</button>
-                <button type="button" class="btn btn-primary" id="verifyOtpBtn">Verify OTP</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="verifyOtpBtn">
+                    Verify <i class="fas fa-check ml-2"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -134,56 +289,449 @@ if (token && !localStorage.getItem('authToken')) {
     localStorage.setItem('authToken', token);
 }
 
-// Check if coming from proper flow by verifying required localStorage items
-window.addEventListener('load', async function() {
-    // Check for auth token and required flow items
-    if (!localStorage.getItem('authToken') || 
-        !localStorage.getItem('nda_form') || 
-        !localStorage.getItem('selectedCategory') ||
-        localStorage.getItem('selectedCategory') !== 'taxagent') {
-        window.location.href = 'dashboard.php';
-        return;
-    }
-
-    // Validate token with server
-    try {
-        const response = await fetch('api/validate-token.php', {
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-            }
-        });
-        
-        if (!response.ok) {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('nda_form');
-            localStorage.removeItem('selectedCategory');
-            window.location.href = 'login.html';
-        }
-    } catch (error) {
-        console.error('Token validation error:', error);
-        window.location.href = 'login.html';
-    }
-
-    // Load any previously saved form data
-    loadFormData();
+// Initialize form
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication and load saved data
+    checkAuthAndLoadData();
+    
+    // Initialize form event listeners
+    initFormEvents();
 });
 
-// Function to check if all required fields are filled
-function checkFormCompletion() {
-    const userType = document.getElementById('userType').value;
-    let requiredFields;
-
-    if (userType === 'organization') {
-        requiredFields = document.querySelectorAll('#organizationFields input[required]');
-    } else {
-        requiredFields = document.querySelectorAll('#individualFields input[required]');
+async function checkAuthAndLoadData() {
+    try {
+        const response = await fetch('api/validate-token.php', {
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+        });
+        
+        if (!response.ok) throw new Error('Invalid token');
+        
+        loadFormData();
+    } catch (error) {
+        console.error('Authentication error:', error);
+        window.location.href = 'login.html';
     }
-
-    const allFilled = Array.from(requiredFields).every(field => field.value.trim() !== '');
-    document.getElementById('nextBtn').disabled = !allFilled;
 }
 
-// Function to save form data to localStorage
+function loadFormData() {
+    const storedData = localStorage.getItem('taxAgentInfo');
+    if (storedData) {
+        const formData = JSON.parse(storedData);
+        
+        // Set form values
+        document.getElementById('userType').value = formData.userType || '';
+        document.getElementById('surname').value = formData.surname || '';
+        document.getElementById('othernames').value = formData.othernames || '';
+        document.getElementById('email').value = formData.email || '';
+        document.getElementById('phone').value = formData.phone || '';
+        document.getElementById('kra_pin').value = formData.kra_pin || '';
+        document.getElementById('orgName').value = formData.orgName || '';
+        document.getElementById('orgPhone').value = formData.orgPhone || '';
+        document.getElementById('orgEmail').value = formData.orgEmail || '';
+        document.getElementById('orgKraPin').value = formData.orgKraPin || '';
+        
+        // Show appropriate sections
+        toggleFormSections();
+        checkFormCompletion();
+    }
+}
+
+function initFormEvents() {
+    // User type change handler
+    document.getElementById('userType').addEventListener('change', toggleFormSections);
+    
+    // Input validation handlers
+    document.getElementById('email').addEventListener('blur', validateEmail);
+    document.getElementById('phone').addEventListener('blur', validatePhone);
+    document.getElementById('orgEmail').addEventListener('blur', validateOrgEmail);
+    document.getElementById('orgPhone').addEventListener('blur', validateOrgPhone);
+    
+    // Verify buttons
+    document.getElementById('verifyPinBtn').addEventListener('click', verifyKraPin);
+    document.getElementById('verifyKraPinBtn').addEventListener('click', verifyOrgKraPin);
+    
+    // Form navigation
+    document.getElementById('backBtn').addEventListener('click', goBack);
+    document.getElementById('nextBtn').addEventListener('click', proceedToOTP);
+    
+    // OTP handlers
+    document.getElementById('verifyOtpBtn').addEventListener('click', verifyOTP);
+    document.getElementById('resendOtpLink').addEventListener('click', resendOTP);
+    
+    // Real-time form validation
+    document.querySelectorAll('#step3Form input').forEach(input => {
+        input.addEventListener('input', checkFormCompletion);
+    });
+}
+
+function toggleFormSections() {
+    const userType = document.getElementById('userType').value;
+    const individualFields = document.getElementById('individualFields');
+    const organizationFields = document.getElementById('organizationFields');
+    
+    if (userType === 'organization') {
+        individualFields.style.display = 'none';
+        organizationFields.style.display = 'block';
+    } else if (userType === 'individual') {
+        individualFields.style.display = 'block';
+        organizationFields.style.display = 'none';
+    } else {
+        individualFields.style.display = 'none';
+        organizationFields.style.display = 'none';
+    }
+    
+    checkFormCompletion();
+}
+
+function checkFormCompletion() {
+    const userType = document.getElementById('userType').value;
+    let allFieldsValid = true;
+    
+    if (userType === 'individual') {
+        // Check KRA PIN verification
+        const kraPinVerified = document.getElementById('otherFields').style.display !== 'none';
+        
+        // Check required fields
+        const requiredFields = [
+            document.getElementById('kra_pin'),
+            document.getElementById('surname'),
+            document.getElementById('othernames'),
+            document.getElementById('email'),
+            document.getElementById('phone')
+        ];
+        
+        allFieldsValid = kraPinVerified && requiredFields.every(field => field.value.trim() !== '');
+    } 
+    else if (userType === 'organization') {
+        // Check Org KRA PIN verification
+        const orgKraPinVerified = document.getElementById('otherFieldsorg').style.display !== 'none';
+        
+        // Check required fields
+        const requiredFields = [
+            document.getElementById('orgKraPin'),
+            document.getElementById('orgName'),
+            document.getElementById('orgEmail'),
+            document.getElementById('orgPhone')
+        ];
+        
+        allFieldsValid = orgKraPinVerified && requiredFields.every(field => field.value.trim() !== '');
+    }
+    else {
+        allFieldsValid = false;
+    }
+    
+    document.getElementById('nextBtn').disabled = !allFieldsValid;
+}
+
+// Validation functions
+function validateEmail() {
+    const email = document.getElementById('email').value;
+    const feedback = document.getElementById('emailFeedback');
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    
+    if (email && !isValid) {
+        feedback.textContent = "Please enter a valid email address";
+        feedback.className = "form-feedback invalid";
+        return false;
+    } else if (isValid) {
+        feedback.textContent = "Email address is valid";
+        feedback.className = "form-feedback valid";
+        return true;
+    }
+    return false;
+}
+
+function validatePhone() {
+    const phone = document.getElementById('phone').value;
+    const feedback = document.getElementById('phoneFeedback');
+    const isValid = /^\d{10}$/.test(phone);
+    
+    if (phone && !isValid) {
+        feedback.textContent = "Please enter a 10-digit phone number";
+        feedback.className = "form-feedback invalid";
+        return false;
+    } else if (isValid) {
+        feedback.textContent = "Phone number is valid";
+        feedback.className = "form-feedback valid";
+        return true;
+    }
+    return false;
+}
+
+function validateOrgEmail() {
+    const email = document.getElementById('orgEmail').value;
+    const feedback = document.getElementById('orgEmailFeedback');
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    
+    if (email && !isValid) {
+        feedback.textContent = "Please enter a valid email address";
+        feedback.className = "form-feedback invalid";
+        return false;
+    } else if (isValid) {
+        feedback.textContent = "Email address is valid";
+        feedback.className = "form-feedback valid";
+        return true;
+    }
+    return false;
+}
+
+function validateOrgPhone() {
+    const phone = document.getElementById('orgPhone').value;
+    const feedback = document.getElementById('orgPhoneFeedback');
+    const isValid = /^\d{10}$/.test(phone);
+    
+    if (phone && !isValid) {
+        feedback.textContent = "Please enter a 10-digit phone number";
+        feedback.className = "form-feedback invalid";
+        return false;
+    } else if (isValid) {
+        feedback.textContent = "Phone number is valid";
+        feedback.className = "form-feedback valid";
+        return true;
+    }
+    return false;
+}
+
+// Verification functions
+async function verifyKraPin() {
+    const kraPin = document.getElementById('kra_pin').value;
+    const feedback = document.getElementById('kraPinFeedback');
+    const button = document.getElementById('verifyPinBtn');
+    const spinner = document.getElementById('verifyPinSpinner');
+    
+    if (!kraPin) {
+        feedback.textContent = "Please enter a KRA PIN";
+        feedback.className = "form-feedback invalid";
+        return;
+    }
+    
+    try {
+        button.disabled = true;
+        spinner.style.display = 'inline-block';
+        feedback.textContent = "Verifying...";
+        feedback.className = "form-feedback";
+        
+        const response = await fetch('validate_kra_pin.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            body: 'kra_pin=' + encodeURIComponent(kraPin)
+        });
+        
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+            feedback.textContent = "KRA PIN verified successfully";
+            feedback.className = "form-feedback valid";
+            document.getElementById('otherFields').style.display = 'block';
+            
+            // If API returned name data, populate it
+            if (data.surname) document.getElementById('surname').value = data.surname;
+            if (data.othernames) document.getElementById('othernames').value = data.othernames;
+            
+            checkFormCompletion();
+        } else {
+            feedback.textContent = data.message || "Invalid KRA PIN. Please try again.";
+            feedback.className = "form-feedback invalid";
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+        feedback.textContent = "An error occurred during verification";
+        feedback.className = "form-feedback invalid";
+    } finally {
+        button.disabled = false;
+        spinner.style.display = 'none';
+    }
+}
+
+async function verifyOrgKraPin() {
+    const kraPin = document.getElementById('orgKraPin').value;
+    const feedback = document.getElementById('orgKraPinFeedback');
+    const button = document.getElementById('verifyKraPinBtn');
+    const spinner = document.getElementById('verifyOrgSpinner');
+    
+    if (!kraPin) {
+        feedback.textContent = "Please enter a KRA PIN";
+        feedback.className = "form-feedback invalid";
+        return;
+    }
+    
+    try {
+        button.disabled = true;
+        spinner.style.display = 'inline-block';
+        feedback.textContent = "Verifying...";
+        feedback.className = "form-feedback";
+        
+        const response = await fetch('validate_org_pin.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            body: 'orgKraPin=' + encodeURIComponent(kraPin)
+        });
+        
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+            feedback.textContent = "KRA PIN verified successfully";
+            feedback.className = "form-feedback valid";
+            document.getElementById('otherFieldsorg').style.display = 'block';
+            
+            // If API returned organization name, populate it
+            if (data.orgName) document.getElementById('orgName').value = data.orgName;
+            
+            checkFormCompletion();
+        } else {
+            feedback.textContent = data.message || "Invalid KRA PIN. Please try again.";
+            feedback.className = "form-feedback invalid";
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+        feedback.textContent = "An error occurred during verification";
+        feedback.className = "form-feedback invalid";
+    } finally {
+        button.disabled = false;
+        spinner.style.display = 'none';
+    }
+}
+
+// Navigation functions
+function goBack() {
+    saveFormData();
+    window.location.href = 'options.php';
+}
+
+async function proceedToOTP() {
+    if (document.getElementById('nextBtn').disabled) return;
+    
+    saveFormData();
+    
+    const userType = document.getElementById('userType').value;
+    const email = userType === 'organization' 
+        ? document.getElementById('orgEmail').value 
+        : document.getElementById('email').value;
+    
+    document.getElementById('otpEmail').textContent = email;
+    
+    try {
+        const response = await fetch('send_otp.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            body: 'email=' + encodeURIComponent(email)
+        });
+        
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+            $('#otpModal').modal('show');
+        } else {
+            showNotification('Error sending OTP: ' + (data.message || 'Please try again'), 'error');
+        }
+    } catch (error) {
+        console.error('OTP error:', error);
+        showNotification('An error occurred while sending OTP', 'error');
+    }
+}
+
+async function verifyOTP() {
+    const userType = document.getElementById('userType').value;
+    const email = userType === 'organization' 
+        ? document.getElementById('orgEmail').value 
+        : document.getElementById('email').value;
+    const otp = document.getElementById('otpInput').value;
+    const errorElement = document.getElementById('otpError');
+    
+    if (!otp || otp.length !== 6) {
+        errorElement.textContent = "Please enter a valid 6-digit code";
+        return;
+    }
+    
+    try {
+        const response = await fetch('verify_otp.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
+        });
+        
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+            $('#otpModal').modal('hide');
+            window.location.href = 'client.php';
+        } else {
+            errorElement.textContent = data.message || "Invalid OTP. Please try again.";
+        }
+    } catch (error) {
+        console.error('OTP verification error:', error);
+        errorElement.textContent = "An error occurred during verification";
+    }
+}
+
+async function resendOTP(e) {
+    e.preventDefault();
+    
+    const userType = document.getElementById('userType').value;
+    const email = userType === 'organization' 
+        ? document.getElementById('orgEmail').value 
+        : document.getElementById('email').value;
+    
+    try {
+        const response = await fetch('send_otp.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            body: 'email=' + encodeURIComponent(email)
+        });
+        
+        if (response.status === 401) {
+            window.location.href = 'api/login.php?session_expired=1';
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+            showNotification('New OTP sent successfully', 'success');
+        } else {
+            showNotification('Error resending OTP: ' + (data.message || 'Please try again'), 'error');
+        }
+    } catch (error) {
+        console.error('Resend OTP error:', error);
+        showNotification('An error occurred while resending OTP', 'error');
+    }
+}
+
 function saveFormData() {
     const formData = {
         userType: document.getElementById('userType').value,
@@ -200,312 +748,10 @@ function saveFormData() {
     localStorage.setItem('taxAgentInfo', JSON.stringify(formData));
 }
 
-// Function to load saved form data
-function loadFormData() {
-    const storedData = localStorage.getItem('taxAgentInfo');
-    if (storedData) {
-        const formData = JSON.parse(storedData);
-        document.getElementById('userType').value = formData.userType;
-        document.getElementById('surname').value = formData.surname;
-        document.getElementById('othernames').value = formData.othernames;
-        document.getElementById('email').value = formData.email;
-        document.getElementById('phone').value = formData.phone;
-        document.getElementById('kra_pin').value = formData.kra_pin;
-        document.getElementById('orgName').value = formData.orgName;
-        document.getElementById('orgPhone').value = formData.orgPhone;
-        document.getElementById('orgEmail').value = formData.orgEmail;
-        document.getElementById('orgKraPin').value = formData.orgKraPin;
-
-        // Show/hide the correct section based on the userType
-        if (formData.userType === 'organization') {
-            document.getElementById('individualFields').style.display = 'none';
-            document.getElementById('organizationFields').style.display = 'block';
-        } else {
-            document.getElementById('individualFields').style.display = 'block';
-            document.getElementById('organizationFields').style.display = 'none';
-        }
-        checkFormCompletion();
-    }
+function showNotification(message, type) {
+    // Implement your notification system here
+    alert(`${type.toUpperCase()}: ${message}`);
 }
-
-// KRA PIN verification for individuals
-document.getElementById('verifyPinBtn').addEventListener('click', function() {
-    const kraPin = document.getElementById('kra_pin').value;
-    const kraPinError = document.getElementById('kraPinError');
-
-    if (!kraPin) {
-        kraPinError.innerText = "Please enter a KRA PIN.";
-        return;
-    }
-
-    fetch('validate_kra_pin.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-        body: 'kra_pin=' + encodeURIComponent(kraPin)
-    })
-    .then(response => {
-        if (response.status === 401) {
-            window.location.href = 'api/login.php?session_expired=1';
-            return;
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === "success") {
-            kraPinError.innerText = "";
-            document.getElementById('otherFields').style.display = 'block';
-            const otherFields = document.querySelectorAll('#otherFields input');
-            otherFields.forEach(field => field.disabled = false);
-            checkFormCompletion();
-        } else {
-            kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        kraPinError.innerText = "An error occurred. Please try again.";
-    });
-});
-
-// KRA PIN verification for organizations
-document.getElementById('verifyKraPinBtn').addEventListener('click', function() {
-    const kraPin = document.getElementById('orgKraPin').value;
-    const kraPinError = document.getElementById('kraPinError');
-
-    if (!kraPin) {
-        kraPinError.innerText = "Please enter a KRA PIN.";
-        return;
-    }
-
-    fetch('validate_org_pin.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-        body: 'orgKraPin=' + encodeURIComponent(kraPin)
-    })
-    .then(response => {
-        if (response.status === 401) {
-            window.location.href = 'api/login.php?session_expired=1';
-            return;
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === "success") {
-            kraPinError.innerText = "";
-            document.getElementById('otherFieldsorg').style.display = 'block';
-            const otherFields = document.querySelectorAll('#otherFields input');
-            otherFields.forEach(field => field.disabled = false);
-            checkFormCompletion();
-        } else {
-            kraPinError.innerText = data.message || "Invalid KRA PIN. Please try again.";
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        kraPinError.innerText = "An error occurred. Please try again.";
-    });
-});
-
-// Email validation
-function validateEmail(email) {
-    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return regex.test(email);
-}
-
-document.getElementById('email').addEventListener('blur', function() {
-    const email = this.value;
-    const emailHelp = document.getElementById('emailHelp');
-
-    if (!validateEmail(email)) {
-        emailHelp.textContent = "Please enter a valid email address.";
-        emailHelp.classList.remove('text-muted');
-        emailHelp.classList.add('text-danger');
-        this.classList.add('is-invalid');
-    } else {
-        emailHelp.textContent = "Email address is valid.";
-        emailHelp.classList.remove('text-danger');
-        emailHelp.classList.add('text-success');
-        this.classList.remove('is-invalid');
-    }
-});
-
-// Phone validation
-function validatePhone(phone) {
-    const regex = /^\d{10}$/;
-    return regex.test(phone);
-}
-
-document.getElementById('phone').addEventListener('blur', function() {
-    const phone = this.value;
-    const phoneHelp = document.getElementById('phoneHelp');
-
-    if (!validatePhone(phone)) {
-        phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
-        phoneHelp.classList.remove('text-muted');
-        phoneHelp.classList.add('text-danger');
-        this.classList.add('is-invalid');
-    } else {
-        phoneHelp.textContent = "Phone number is valid.";
-        phoneHelp.classList.remove('text-danger');
-        phoneHelp.classList.add('text-success');
-        this.classList.remove('is-invalid');
-    }
-});
-
-// Organization email validation
-document.getElementById('orgEmail').addEventListener('blur', function() {
-    const email = this.value;
-    const emailHelp = document.getElementById('emailHelporg');
-
-    if (!validateEmail(email)) {
-        emailHelp.textContent = "Please enter a valid email address.";
-        emailHelp.classList.remove('text-muted');
-        emailHelp.classList.add('text-danger');
-        this.classList.add('is-invalid');
-    } else {
-        emailHelp.textContent = "Email address is valid.";
-        emailHelp.classList.remove('text-danger');
-        emailHelp.classList.add('text-success');
-        this.classList.remove('is-invalid');
-    }
-});
-
-// Organization phone validation
-document.getElementById('orgPhone').addEventListener('blur', function() {
-    const phone = this.value;
-    const phoneHelp = document.getElementById('phoneHelporg');
-
-    if (!validatePhone(phone)) {
-        phoneHelp.textContent = "Please enter a valid 10-digit phone number.";
-        phoneHelp.classList.remove('text-muted');
-        phoneHelp.classList.add('text-danger');
-        this.classList.add('is-invalid');
-    } else {
-        phoneHelp.textContent = "Phone number is valid.";
-        phoneHelp.classList.remove('text-danger');
-        phoneHelp.classList.add('text-success');
-        this.classList.remove('is-invalid');
-    }
-});
-
-// User type change handler
-document.getElementById('userType').addEventListener('change', function() {
-    if (this.value === 'organization') {
-        document.getElementById('individualFields').style.display = 'none';
-        document.getElementById('organizationFields').style.display = 'block';
-    } else {
-        document.getElementById('individualFields').style.display = 'block';
-        document.getElementById('organizationFields').style.display = 'none';
-    }
-    checkFormCompletion();
-});
-
-// Form input handlers
-document.querySelectorAll('#step3Form input').forEach(input => {
-    input.addEventListener('input', checkFormCompletion);
-});
-
-// Next button handler
-document.getElementById('nextBtn').addEventListener('click', function() {
-    saveFormData();
-
-    let email = document.getElementById('email').value;
-    fetch('send_otp.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-        body: 'email=' + encodeURIComponent(email)
-    })
-    .then(response => {
-        if (response.status === 401) {
-            window.location.href = 'api/login.php?session_expired=1';
-            return;
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === "success") {
-            $('#otpModal').modal('show');
-        } else {
-            alert("Error sending OTP. Try again.");
-        }
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-// OTP verification handler
-document.getElementById('verifyOtpBtn').addEventListener('click', function() {
-    let email = document.getElementById('email').value;
-    let otp = document.getElementById('otpInput').value;
-
-    fetch('verify_otp.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-        body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
-    })
-    .then(response => {
-        if (response.status === 401) {
-            window.location.href = 'api/login.php?session_expired=1';
-            return;
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === "success") {
-            $('#otpModal').modal('hide');
-            window.location.href = 'client.php';
-        } else {
-            document.getElementById('otpError').innerText = data.message;
-        }
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-// Resend OTP handler
-document.getElementById('resendOtpBtn').addEventListener('click', function() {
-    let email = document.getElementById('email').value;
-
-    fetch('send_otp.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-        body: 'email=' + encodeURIComponent(email)
-    })
-    .then(response => {
-        if (response.status === 401) {
-            window.location.href = 'api/login.php?session_expired=1';
-            return;
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.status === "success") {
-            alert("A new OTP has been sent.");
-        } else {
-            alert("Error resending OTP. Try again.");
-        }
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-// Back button handler
-document.getElementById('backBtn').addEventListener('click', function() {
-    saveFormData();
-    window.location.href = 'options.php';
-});
 </script>
 
 <?php include 'footer.php'; ?>

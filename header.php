@@ -2,6 +2,16 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+require_once 'config.php';
+require_once 'session_manager.php';
+
+// Initialize session manager
+$sessionManager = new SessionManager($conn);
+
+// Get token from session or headers
+$token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : '');
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,7 +72,8 @@ if (session_status() === PHP_SESSION_NONE) {
         .logo-img {
             height: 42px;
             transition: transform 0.3s ease;
-            filter: brightness(0) invert(1); /* Make logo white */
+            filter: brightness(0) invert(1);
+            /* Make logo white */
         }
 
         .logo-img:hover {
@@ -310,6 +321,23 @@ if (session_status() === PHP_SESSION_NONE) {
                 display: none;
             }
         }
+
+        .spinner-border {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            vertical-align: text-bottom;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+
+        @keyframes spinner-border {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
@@ -360,6 +388,20 @@ if (session_status() === PHP_SESSION_NONE) {
     <!-- Main Content -->
     <div class="main-content-wrapper">
         <!-- Your page content goes here -->
-
-
- 
+        <!-- Session Timeout Modal -->
+        <div class="modal fade" id="sessionTimeoutModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">Session About to Expire</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Your session will expire in <span id="sessionCountdown">5:00</span>. Would you like to extend your session?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="logoutNowBtn">Logout Now</button>
+                        <button type="button" class="btn btn-primary" id="extendSessionBtn">Extend Session</button>
+                    </div>
+                </div>
+            </div>
+        </div>

@@ -27,7 +27,7 @@ try {
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" id="surname" name="surname" 
-                                           placeholder=" " required>
+                                           placeholder=" " required readonly>
                                     <label for="surname" class="form-label">Surname</label>
                                     <div class="invalid-feedback">Please enter your surname</div>
                                 </div>
@@ -36,7 +36,7 @@ try {
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" id="othernames" name="othernames" 
-                                           placeholder=" " required>
+                                           placeholder=" " required readonly>
                                     <label for="othernames" class="form-label">Other Names</label>
                                     <div class="invalid-feedback">Please enter your other names</div>
                                 </div>
@@ -53,7 +53,7 @@ try {
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <div class="form-floating">
                                     <input type="tel" class="form-control" id="phone" name="phone" 
-                                           placeholder=" " required>
+                                           placeholder=" " required readonly>
                                     <label for="phone" class="form-label">Phone Number</label>
                                     <div class="invalid-feedback">Please enter a valid phone number</div>
                                     <small class="text-muted mt-1 d-block">Include country code (e.g. +254712345678)</small>
@@ -63,7 +63,7 @@ try {
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" id="kra_pin" name="kra_pin" 
-                                           placeholder=" " required>
+                                           placeholder=" " required readonly>
                                     <label for="kra_pin" class="form-label">KRA PIN</label>
                                     <div class="invalid-feedback">Please enter your KRA PIN</div>
                                     <small class="text-muted mt-1 d-block">Format: A123456789X</small>
@@ -127,13 +127,13 @@ try {
     }
     
     .btn-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
+        background-color: #d9232e;
+        border-color:#d9232e;
     }
     
     .btn-primary:hover {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
+        background-color: #d9232e;
+        border-color: #d9232e;
     }
     
     .btn-outline-secondary:hover {
