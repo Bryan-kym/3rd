@@ -546,30 +546,30 @@ try {
                     <div class="stat-card">
                         <h3>Total Requests</h3>
                         <div class="value" id="totalRequests">--</div>
-                        <div class="change positive">
-                            <!-- <i class="bi bi-arrow-up"></i> <span id="requestsChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change positive">
+                            <i class="bi bi-arrow-up"></i> <span id="requestsChange">Loading...</span>
+                        </div> -->
                     </div>
                     <div class="stat-card">
-                        <h3>Approved</h3>
+                        <h3>Resolved</h3>
                         <div class="value" id="approvedRequests">--</div>
-                        <div class="change positive">
-                            <!-- <i class="bi bi-arrow-up"></i> <span id="approvedChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change positive">
+                            <i class="bi bi-arrow-up"></i> <span id="approvedChange">Loading...</span>
+                        </div> -->
                     </div>
                     <div class="stat-card">
                         <h3>Pending</h3>
                         <div class="value" id="pendingRequests">--</div>
-                        <div class="change negative">
-                            <!-- <i class="bi bi-arrow-down"></i> <span id="pendingChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change negative">
+                            <i class="bi bi-arrow-down"></i> <span id="pendingChange">Loading...</span>
+                        </div> -->
                     </div>
                     <div class="stat-card">
-                        <h3>Processing</h3>
+                        <h3>Rejected</h3>
                         <div class="value" id="processingRequests">--</div>
-                        <div class="change positive">
-                            <!-- <i class="bi bi-arrow-up"></i> <span id="processingChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change positive">
+                            <i class="bi bi-arrow-up"></i> <span id="processingChange">Loading...</span>
+                        </div> -->
                     </div>
                 </div>
 
@@ -735,9 +735,9 @@ try {
             // Update stats cards
             function updateStats(stats) {
                 document.getElementById('totalRequests').textContent = stats.total_requests || 0;
-                document.getElementById('approvedRequests').textContent = stats.approved_requests || 0;
+                document.getElementById('approvedRequests').textContent = stats.resolved_requests || 0;
                 document.getElementById('pendingRequests').textContent = stats.pending_requests || 0;
-                document.getElementById('processingRequests').textContent = stats.processing_requests || 0;
+                document.getElementById('processingRequests').textContent = stats.rejected_requests || 0;
             }
 
             // Update requests table with pagination

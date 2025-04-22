@@ -1,4 +1,5 @@
 <?php
+ob_start();
 include 'header.php';
 require_once 'auth.php';
 require_once 'config.php';
@@ -17,7 +18,7 @@ try {
         FROM requests r
         JOIN requestors req ON r.requested_by = req.id
         WHERE r.id = ? AND req.email = (SELECT email FROM ext_users WHERE id = ?)
-        AND r.request_status = 'pending'
+        AND r.request_status in ('pending' , 'rejected')
     ");
     $stmt->bind_param("ii", $requestId, $userId);
     $stmt->execute();
@@ -456,5 +457,5 @@ try {
     header('Location: dashboard.php');
     exit;
 }
-
+ob_flush();
 include 'footer.php';

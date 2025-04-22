@@ -18,19 +18,21 @@ try {
     $totalResult = $stmt->get_result();
     $totalData = $totalResult->fetch_assoc();
     
-    // Get counts by status
+    // Get counts by statusaas
     $statusStmt = $conn->prepare("
-        SELECT 
-            SUM(CASE WHEN r.request_status = 'pending' THEN 1 ELSE 0 END) as pending_requests,
-            SUM(CASE WHEN r.request_status = 'approved' THEN 1 ELSE 0 END) as approved_requests,
-            SUM(CASE WHEN r.request_status = 'resolved' THEN 1 ELSE 0 END) as resolved_requests,
-            SUM(CASE WHEN r.request_status = 'processing' THEN 1 ELSE 0 END) as processing_requests,
-            SUM(CASE WHEN r.request_status = 'assigned' THEN 1 ELSE 0 END) as assigned_requests,
-            SUM(CASE WHEN r.request_status = 'rejected' THEN 1 ELSE 0 END) as rejected_requests
-        FROM requests r
-        JOIN requestors req ON r.requested_by = req.id
-        WHERE req.email = (SELECT email FROM ext_users WHERE id = ?)
-    ");
+    SELECT 
+        SUM(CASE WHEN r.request_status = 'pending' THEN 1 ELSE 0 END) as pending_request,
+        SUM(CASE WHEN r.request_status = 'approved' THEN 1 ELSE 0 END) as approved_requests,
+        SUM(CASE WHEN r.request_status = 'resolved' THEN 1 ELSE 0 END) as resolved_requests,
+        SUM(CASE WHEN r.request_status = 'reviewed' THEN 1 ELSE 0 END) as reviewed_requests,
+        SUM(CASE WHEN r.request_status = 'assigned' THEN 1 ELSE 0 END) as assigned_requests,
+        SUM(CASE WHEN r.request_status = 'rejected' THEN 1 ELSE 0 END) as rejected_requests,
+        SUM(CASE WHEN r.request_status = 'requested' THEN 1 ELSE 0 END) as requested_requests,
+        SUM(CASE WHEN r.request_status IN ('pending', 'approved', 'reviewed', 'assigned', 'requested') THEN 1 ELSE 0 END) as pending_requests
+    FROM requests r
+    JOIN requestors req ON r.requested_by = req.id
+    WHERE req.email = (SELECT email FROM ext_users WHERE id = ?)
+");
     $statusStmt->bind_param("i", $userId);
     $statusStmt->execute();
     $statusResult = $statusStmt->get_result();

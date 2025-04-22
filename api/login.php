@@ -61,7 +61,7 @@ try {
     $recipientemail_ = $user['email'];
     require_once '../send_email.php';
 
-    if (strpos($emailSentStatus, 'success') === true) {
+    if (strpos($emailSentStatus, 'success') === false) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Failed to send OTP email']);
         exit;

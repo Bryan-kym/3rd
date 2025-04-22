@@ -463,7 +463,7 @@ try {
         </div>
 
         <div class="action-buttons">
-            <?php if (strtolower($request['status']) === 'pending'): ?>
+            <?php if (strtolower($request['status']) === 'pending' || strtolower($request['status']) === 'rejected'): ?>
                 <a href="edit-request.php?id=<?php echo $requestId; ?>" class="btn btn-primary">
                     <i class="bi bi-pencil"></i> Edit Request
                 </a>

@@ -41,12 +41,25 @@ try {
         $periodFrom = $row['period_from'] ? (new DateTime($row['period_from']))->format('M d, Y') : null;
         $periodTo = $row['period_to'] ? (new DateTime($row['period_to']))->format('M d, Y') : null;
         
+        // Simplify request status
+        $originalStatus = $row['request_status'];
+        $simplifiedStatus = $originalStatus; // default to original
+        
+        if ($originalStatus === 'resolved') {
+            $simplifiedStatus = 'resolved';
+        } elseif ($originalStatus === 'rejected') {
+            $simplifiedStatus = 'rejected';
+        } elseif (in_array($originalStatus, ['pending', 'approved', 'reviewed', 'requested' , 'assigned'])) {
+            $simplifiedStatus = 'pending';
+        }
+        
         $requests[] = [
             'id' => $row['id'],
             'tracking_number' => $row['tracking_number'],
             'request_date' => $requestDate->format('M d, Y'),
             'datetime' => $requestDate->format('Y-m-d H:i:s'),
-            'request_status' => $row['request_status'],
+            'request_status' => $simplifiedStatus,
+            'original_status' => $originalStatus, // Keep original if needed for reference
             'category' => $row['category'],
             'data_description' => $row['data_description'],
             'specific_fields' => $row['specific_fields'],
