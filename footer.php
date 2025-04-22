@@ -86,105 +86,47 @@
         }
     }
 
-    // Enhanced logout functionality for main logout link
-    document.getElementById('logoutLink').addEventListener('click', async function(e) {
-        e.preventDefault();
-        const logoutLink = this;
-        const spinner = document.getElementById('logoutSpinner');
-
-        try {
-            // Show loading state
-            logoutLink.style.pointerEvents = 'none';
-            spinner.style.display = 'inline-block';
-            
-            await performLogout();
-            
-        } catch (error) {
-            console.error('Logout error:', error);
-            logoutLink.style.pointerEvents = 'auto';
-            spinner.style.display = 'none';
-        }
-    });
-
-    // Session timeout management
+    // Session management
     document.addEventListener('DOMContentLoaded', function() {
-        const sessionWarning = <?php echo isset($_SESSION['session_warning']) ? json_encode($_SESSION['session_warning']) : 'null'; ?>;
-        const modal = new bootstrap.Modal(document.getElementById('sessionTimeoutModal'));
-
-        if (sessionWarning && sessionWarning.show) {
-            let remaining = sessionWarning.remaining;
-            const countdownElement = document.getElementById('sessionCountdown');
-            const logoutNowBtn = document.getElementById('logoutNowBtn');
-
-            // Update countdown display
-            function updateCountdown() {
-                const minutes = Math.floor(remaining / 60);
-                const seconds = remaining % 60;
-                countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                remaining--;
+        // Initialize modal
+        const sessionModal = new bootstrap.Modal(document.getElementById('sessionTimeoutModal'));
+        let sessionCountdownInterval;
+        
+        // Handle logout link
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const spinner = document.getElementById('logoutSpinner');
                 
-                if (remaining <= 0) {
-                    clearInterval(countdownInterval);
-                    performAutoLogout();
+                try {
+                    // Show loading state
+                    logoutLink.style.pointerEvents = 'none';
+                    spinner.style.display = 'inline-block';
+                    
+                    await performLogout();
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    logoutLink.style.pointerEvents = 'auto';
+                    spinner.style.display = 'none';
                 }
-            }
-
-            // Show modal and start countdown
-            modal.show();
-            updateCountdown();
-            const countdownInterval = setInterval(updateCountdown, 1000);
-
-            // Extend session button
-            document.getElementById('extendSessionBtn').addEventListener('click', function() {
-                fetch('api/refresh_session.php')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            modal.hide();
-                            showNotification('Session extended successfully', 'success');
-                        }
-                    });
             });
+        }
 
-            // Enhanced logout now button
-            logoutNowBtn.addEventListener('click', function() {
-                // Show loading state
-                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging out...';
-                this.disabled = true;
-                
-                // Perform logout
-                performLogout().finally(() => {
-                    // Reset button state if logout fails
-                    this.innerHTML = 'Logout Now';
-                    this.disabled = false;
-                });
-            });
+        // Check for session warning
+        const sessionWarning = <?php echo isset($_SESSION['session_warning']) ? json_encode($_SESSION['session_warning']) : 'null'; ?>;
+        if (sessionWarning && sessionWarning.show) {
+            showSessionWarning(sessionWarning.remaining, sessionModal);
         }
 
         // Start session checker
         startSessionChecker();
     });
 
-    // Function to handle automatic logout when session expires
-    async function performAutoLogout() {
-        try {
-            // Clear client-side storage
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('nda_form');
-            localStorage.removeItem('selectedCategory');
-            
-            // Redirect to login with session expired message
-            window.location.href = 'login.html?session=expired';
-        } catch (error) {
-            console.error('Auto logout error:', error);
-            window.location.href = 'login.html';
-        }
-    }
-
     // Session timeout checker
-    let sessionCheckInterval;
     const SESSION_CHECK_INTERVAL = 60000; // Check every minute
     const WARNING_THRESHOLD = 300; // 5 minutes in seconds
+    let sessionCheckInterval;
 
     function startSessionChecker() {
         // Clear any existing interval
@@ -199,7 +141,7 @@
         sessionCheckInterval = setInterval(checkSessionStatus, SESSION_CHECK_INTERVAL);
     }
 
-    function checkSessionStatus() {
+    async function checkSessionStatus() {
         const token = localStorage.getItem('authToken') || '<?php echo $_SESSION['authToken'] ?? ''; ?>';
         
         if (!token) {
@@ -207,41 +149,38 @@
             return;
         }
 
-        fetch('api/check_session.php', {
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        })
-        .then(response => {
+        try {
+            const response = await fetch('api/check_session.php', {
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+            
             if (!response.ok) {
-                return response.json().then(err => { throw err; });
+                throw data;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.shouldWarn) {
-                showSessionWarning(data.remaining);
-            } else if (data.success === false) {
-                // Session is invalid, force logout
-                performAutoLogout();
+
+            if (data.shouldWarn) {
+                showSessionWarning(data.remaining, new bootstrap.Modal(document.getElementById('sessionTimeoutModal')));
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Session check failed:', error);
-            if (error.message.includes('No session token found')) {
+            if (error.message && error.message.includes('No session token found')) {
                 performAutoLogout();
             }
-        });
+        }
     }
 
-    function showSessionWarning(remainingSeconds) {
-        const modal = new bootstrap.Modal(document.getElementById('sessionTimeoutModal'));
+    function showSessionWarning(remainingSeconds, modal) {
         const countdownElement = document.getElementById('sessionCountdown');
         const logoutNowBtn = document.getElementById('logoutNowBtn');
+        const extendSessionBtn = document.getElementById('extendSessionBtn');
 
-        // Stop any existing countdown
+        // Clear any existing countdown
         if (window.sessionCountdownInterval) {
             clearInterval(window.sessionCountdownInterval);
         }
@@ -265,16 +204,24 @@
         window.sessionCountdownInterval = setInterval(updateCountdown, 1000);
 
         // Setup button handlers
-        document.getElementById('extendSessionBtn').onclick = function() {
-            fetch('api/refresh_session.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        modal.hide();
-                        showNotification('Session extended', 'success');
-                        startSessionChecker();
-                    }
-                });
+        extendSessionBtn.onclick = async function() {
+            try {
+                const response = await fetch('api/refresh_session.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    modal.hide();
+                    showNotification('Session extended', 'success');
+                    // Reset the modal backdrop if it remains
+                    document.querySelector('.modal-backdrop').remove();
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }
+            } catch (error) {
+                console.error('Session extension failed:', error);
+                showNotification('Failed to extend session', 'error');
+            }
         };
 
         logoutNowBtn.onclick = function() {
@@ -287,8 +234,20 @@
         };
     }
 
-    // Start the session checker when page loads
-    document.addEventListener('DOMContentLoaded', startSessionChecker);
+    async function performAutoLogout() {
+        try {
+            // Clear client-side storage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('nda_form');
+            localStorage.removeItem('selectedCategory');
+            
+            // Redirect to login with session expired message
+            window.location.href = 'login.html?session=expired';
+        } catch (error) {
+            console.error('Auto logout error:', error);
+            window.location.href = 'login.html';
+        }
+    }
 </script>
 </body>
 </html>

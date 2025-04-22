@@ -316,7 +316,7 @@ try {
                                 </form>
                             </div>
                             
-                            <div class="border-top pt-4">
+                            <!-- <div class="border-top pt-4">
                                 <h5 class="mb-3"><i class="fas fa-shield-alt me-2"></i> Two-Factor Authentication</h5>
                                 <form method="POST">
                                     <input type="hidden" name="toggle_two_factor" value="1">
@@ -327,7 +327,11 @@ try {
                                         </div>
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" name="two_factor_enabled" 
-                                                   id="twoFactorToggle" <?= ($userData['two_factor_enabled'] ?? false) ? 'checked' : '' ?> value="1">
+                                                   id="twoFactorToggle" 
+                                                   
+                                                    // ($userData['two_factor_enabled'] ?? false) ? 'checked' : ''
+                                                     
+                                                    value="1">
                                             <label class="form-check-label" for="twoFactorToggle"></label>
                                         </div>
                                     </div>
@@ -337,7 +341,7 @@ try {
                                         </button>
                                     </div>
                                 </form>
-                            </div>
+                            </div> -->
                         </div>
                         
                         <!-- Activity Tab -->

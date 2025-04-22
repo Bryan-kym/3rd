@@ -49,8 +49,10 @@ try {
             $simplifiedStatus = 'resolved';
         } elseif ($originalStatus === 'rejected') {
             $simplifiedStatus = 'rejected';
-        } elseif (in_array($originalStatus, ['pending', 'approved', 'reviewed', 'requested' , 'assigned'])) {
+        } elseif (in_array($originalStatus, ['pending', 'requested' , 'resubmitted'])) {
             $simplifiedStatus = 'pending';
+        }elseif (in_array($originalStatus, ['approved', 'reviewed', 'assigned'])) {
+            $simplifiedStatus = 'in-progress';
         }
         
         $requests[] = [

@@ -359,7 +359,7 @@ $token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_
 
             <!-- Title (centered) -->
             <div class="d-flex flex-grow-1 justify-content-center">
-                <a href="#" class="navbar-brand text-decoration-none">3rd Party Data Request</a>
+                <a href="dashboard.php" class="navbar-brand text-decoration-none">3rd Party Data Request</a>
             </div>
 
             <!-- Profile Dropdown (right) -->

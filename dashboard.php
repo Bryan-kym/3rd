@@ -308,9 +308,9 @@ try {
                 color: var(--danger-color);
             }
 
-            .status-processing {
-                background-color: rgba(217, 35, 46, 0.1);
-                color: var(--primary-color);
+            .status-in-progress {
+                background-color: rgba(56, 35, 217, 0.1);
+                color:rgb(38, 79, 213);
             }
 
             .action-btn {
@@ -774,8 +774,8 @@ try {
                         } else if (status.includes('rejected') || status.includes('denied')) {
                             statusClass = 'status-rejected';
                             statusIcon = '<i class="bi bi-x-circle"></i> ';
-                        } else if (status.includes('processing') || status.includes('assigned') || status.includes('in progress')) {
-                            statusClass = 'status-processing';
+                        } else if (status.includes('processing') || status.includes('resubmitted') || status.includes('in-progress')) {
+                            statusClass = 'status-in-progress';
                             statusIcon = '<i class="bi bi-gear"></i> ';
                         }
 

@@ -28,7 +28,8 @@ try {
         SUM(CASE WHEN r.request_status = 'assigned' THEN 1 ELSE 0 END) as assigned_requests,
         SUM(CASE WHEN r.request_status = 'rejected' THEN 1 ELSE 0 END) as rejected_requests,
         SUM(CASE WHEN r.request_status = 'requested' THEN 1 ELSE 0 END) as requested_requests,
-        SUM(CASE WHEN r.request_status IN ('pending', 'approved', 'reviewed', 'assigned', 'requested') THEN 1 ELSE 0 END) as pending_requests
+        SUM(CASE WHEN r.request_status = 'resubmitted' THEN 1 ELSE 0 END) as resubmitted_requests,
+        SUM(CASE WHEN r.request_status IN ('pending', 'approved', 'reviewed', 'assigned', 'requested', 'resubmitted') THEN 1 ELSE 0 END) as pending_requests
     FROM requests r
     JOIN requestors req ON r.requested_by = req.id
     WHERE req.email = (SELECT email FROM ext_users WHERE id = ?)
