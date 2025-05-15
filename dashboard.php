@@ -78,7 +78,7 @@ try {
             }
 
             .welcome-card {
-                background: linear-gradient(135deg, var(--primary-color), #a81a22, var(--secondary-color));
+                background: linear-gradient(135deg, var(--secondary-color), #a81a22, var(--primary-color));
                 /* background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); */
                 color: var(--light-color);
                 padding: 2rem;
@@ -310,7 +310,7 @@ try {
 
             .status-in-progress {
                 background-color: rgba(56, 35, 217, 0.1);
-                color:rgb(38, 79, 213);
+                color: rgb(38, 79, 213);
             }
 
             .action-btn {
@@ -793,17 +793,30 @@ try {
                             description;
 
                         row.innerHTML = `
-                        <td>${request.tracking_number || 'N/A'}</td>
-                        <td>${formattedDate}</td>
-                        <td>${request.category || 'N/A'}</td>
-                        <td title="${description}">${shortDescription}</td>
-                        <td><span class="status-badge ${statusClass}">${statusIcon}${request.request_status || 'N/A'}</span></td>
-                        <td>
-                            <button class="action-btn view-btn" data-id="${request.id}">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                        </td>
-                    `;
+                    <td>${request.tracking_number || 'N/A'}</td>
+                    <td>${formattedDate}</td>
+                    <td>${request.category || 'N/A'}</td>
+                    <td title="${description}">${shortDescription}</td>
+                    <td><span class="status-badge ${statusClass}">${statusIcon}${request.request_status || 'N/A'}</span></td>
+                    <td>
+                        <button class="action-btn view-btn" data-id="${request.id}">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                    </td>
+                `;
+
+                        // Add click event directly to the button
+                        const viewBtn = row.querySelector('.view-btn');
+                        viewBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const requestId = this.getAttribute('data-id');
+                            if (requestId) {
+                                window.location.href = `request-details.php?id=${requestId}`;
+                            } else {
+                                console.error('No request ID found for this item');
+                                showErrorToast('Could not view request: missing ID');
+                            }
+                        });
 
                         requestsTableBody.appendChild(row);
                     });
@@ -812,14 +825,6 @@ try {
                     if (response.data.length > rowsPerPage) {
                         addPaginationControls(response.data.length);
                     }
-
-                    // Add event listeners to view buttons
-                    document.querySelectorAll('.view-btn').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const requestId = this.getAttribute('data-id');
-                            window.location.href = `request-details.php?id=${requestId}`;
-                        });
-                    });
 
                 } else {
                     noRequestsMessage.style.display = 'block';
@@ -833,14 +838,14 @@ try {
                 const paginationDiv = document.createElement('div');
                 paginationDiv.className = 'pagination-controls';
                 paginationDiv.innerHTML = `
-                <button id="prevPage" class="btn-outline" ${currentPage === 1 ? 'disabled' : ''}>
-                    <i class="bi bi-chevron-left"></i> Previous
-                </button>
-                <span>Page ${currentPage} of ${totalPages}</span>
-                <button id="nextPage" class="btn-outline" ${currentPage === totalPages ? 'disabled' : ''}>
-                    Next <i class="bi bi-chevron-right"></i>
-                </button>
-            `;
+            <button id="prevPage" class="btn-outline" ${currentPage === 1 ? 'disabled' : ''}>
+                <i class="bi bi-chevron-left"></i> Previous
+            </button>
+            <span>Page ${currentPage} of ${totalPages}</span>
+            <button id="nextPage" class="btn-outline" ${currentPage === totalPages ? 'disabled' : ''}>
+                Next <i class="bi bi-chevron-right"></i>
+            </button>
+        `;
 
                 // Insert after table container
                 document.querySelector('.table-container').after(paginationDiv);
@@ -874,12 +879,12 @@ try {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.innerHTML = `
-                <div class="toast-icon">
-                    ${type === 'success' ? '<i class="bi bi-check-circle"></i>' : '<i class="bi bi-exclamation-circle"></i>'}
-                </div>
-                <div class="toast-message">${message}</div>
-                <button class="toast-close"><i class="bi bi-x"></i></button>
-            `;
+            <div class="toast-icon">
+                ${type === 'success' ? '<i class="bi bi-check-circle"></i>' : '<i class="bi bi-exclamation-circle"></i>'}
+            </div>
+            <div class="toast-message">${message}</div>
+            <button class="toast-close"><i class="bi bi-x"></i></button>
+        `;
 
                 document.body.appendChild(toast);
 

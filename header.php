@@ -54,7 +54,7 @@ $token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_
 
         /* Enhanced Header with Gradient */
         .navbar {
-            background: linear-gradient(var(--gradient-angle), var(--primary-red), var(--dark-black));
+            background: linear-gradient(var(--gradient-angle),  var(--dark-black), var(--primary-red));
             padding: 0.5rem 2rem;
             box-shadow: var(--header-shadow);
             position: relative;
