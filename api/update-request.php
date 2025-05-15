@@ -17,7 +17,7 @@ try {
         FROM requests r
         JOIN requestors req ON r.requested_by = req.id
         WHERE r.id = ? AND req.email = (SELECT email FROM ext_users WHERE id = ?)
-        AND r.request_status = 'pending'
+        AND r.request_status in ('pending', 'rejected')
     ");
     $stmt->bind_param("ii", $requestId, $userId);
     $stmt->execute();
@@ -35,7 +35,7 @@ try {
     // Update request
     $updateStmt = $conn->prepare("
         UPDATE requests 
-        SET description = ?, specific_fields = ?, request_purpose = ?
+        SET description = ?, specific_fields = ?, request_purpose = ?, request_status = 'resubmitted', tracking_status = 'resubmitted'
         WHERE id = ?
     ");
     $updateStmt->bind_param("sssi", $description, $specificFields, $requestPurpose, $requestId);

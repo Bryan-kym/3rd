@@ -116,6 +116,17 @@
                   />
                 </div>
               </div>
+
+              <div class="mb-3">
+                <label for="id" class="form-label">ID/Passport *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="id"
+                  required
+                  placeholder="Enter your ID/Passport"
+                />
+              </div>
               
               <div class="mb-3">
                 <label for="email" class="form-label">Email *</label>
@@ -318,6 +329,7 @@
           const surname = document.getElementById("surname").value.trim();
           const otherNames = document.getElementById("otherNames").value.trim();
           const email = document.getElementById("email").value.trim();
+          const id = document.getElementById("id").value;
           const phone = document.getElementById("fullPhone").value;
           const password = document.getElementById("password").value;
           const confirmPassword =

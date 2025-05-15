@@ -2,11 +2,6 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-?>
-<?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 require_once 'config.php';
 require_once 'session_manager.php';
@@ -59,7 +54,7 @@ $token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_
 
         /* Enhanced Header with Gradient */
         .navbar {
-            background: linear-gradient(var(--gradient-angle), var(--primary-red), var(--dark-black));
+            background: linear-gradient(var(--gradient-angle),  var(--dark-black), var(--primary-red));
             padding: 0.5rem 2rem;
             box-shadow: var(--header-shadow);
             position: relative;
@@ -69,6 +64,29 @@ $token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_
 
         .navbar-container {
             width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .logo-img {
+            height: 42px;
+            transition: transform 0.3s ease;
+            filter: brightness(0) invert(1);
+            /* Make logo white */
+        }
+
+        .logo-img:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+            margin: 0;
+            padding: 0 1rem;
+            color: white;
             position: relative;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
@@ -215,17 +233,110 @@ $token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_
             margin-left: 15px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 1.5rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
         }
-        .logo-img {
-            height: 40px; /* Adjust logo size */
+
+        .notification-close:hover {
+            opacity: 1;
         }
-        .profile-dropdown {
-            cursor: pointer;
+
+        /* Improved Footer Styles */
+        .kra-footer {
+            background-color: var(--dark-black);
+            color: #ffffff;
+            padding: 1.5rem 0;
+            margin-top: auto;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .dropdown-menu {
-            left: auto !important;
-            right: 0 !important;
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            text-align: center;
+        }
+
+        .footer-text {
+            margin: 0;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .footer-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .footer-separator {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+        }
+
+        /* Main content structure */
+        .main-content-wrapper {
+            flex: 1 0 auto;
+            padding-bottom: 2rem;
+        }
+
+        .dashboard-container {
+            padding-bottom: 2rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+
+            .profile-name {
+                max-width: 100px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .footer-separator {
+                display: none;
+            }
+        }
+
+        .spinner-border {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            vertical-align: text-bottom;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+
+        @keyframes spinner-border {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -248,7 +359,7 @@ $token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_
 
             <!-- Title (centered) -->
             <div class="d-flex flex-grow-1 justify-content-center">
-                <a href="#" class="navbar-brand text-decoration-none">3rd Party Data Request</a>
+                <a href="dashboard.php" class="navbar-brand text-decoration-none">3rd Party Data Request</a>
             </div>
 
             <!-- Profile Dropdown (right) -->
@@ -274,7 +385,23 @@ $token = $_SESSION['authToken'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_
         </div>
     </nav>
 
-    <!-- Bootstrap 5 JS Bundle (required for dropdowns) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-</body>
-</html>
+    <!-- Main Content -->
+    <div class="main-content-wrapper">
+        <!-- Your page content goes here -->
+        <!-- Session Timeout Modal -->
+        <div class="modal fade" id="sessionTimeoutModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">Session About to Expire</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Your session will expire in <span id="sessionCountdown">5:00</span>. Would you like to extend your session?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="logoutNowBtn">Logout Now</button>
+                        <button type="button" class="btn btn-primary" id="extendSessionBtn">Extend Session</button>
+                    </div>
+                </div>
+            </div>
+        </div>

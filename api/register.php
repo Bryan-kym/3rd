@@ -104,7 +104,7 @@ try {
     // Send OTP via email
     require_once '../send_email.php';
 
-    if (strpos($emailSentStatus, 'success') === true) {
+    if (strpos($emailSentStatus, 'success') === false) {
         // Clean up if email fails to send
         $conn->begin_transaction();
         

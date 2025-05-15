@@ -78,7 +78,7 @@ try {
             }
 
             .welcome-card {
-                background: linear-gradient(135deg, var(--primary-color), #a81a22, var(--secondary-color));
+                background: linear-gradient(135deg, var(--secondary-color), #a81a22, var(--primary-color));
                 /* background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); */
                 color: var(--light-color);
                 padding: 2rem;
@@ -308,9 +308,9 @@ try {
                 color: var(--danger-color);
             }
 
-            .status-processing {
-                background-color: rgba(217, 35, 46, 0.1);
-                color: var(--primary-color);
+            .status-in-progress {
+                background-color: rgba(56, 35, 217, 0.1);
+                color: rgb(38, 79, 213);
             }
 
             .action-btn {
@@ -546,30 +546,30 @@ try {
                     <div class="stat-card">
                         <h3>Total Requests</h3>
                         <div class="value" id="totalRequests">--</div>
-                        <div class="change positive">
-                            <!-- <i class="bi bi-arrow-up"></i> <span id="requestsChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change positive">
+                            <i class="bi bi-arrow-up"></i> <span id="requestsChange">Loading...</span>
+                        </div> -->
                     </div>
                     <div class="stat-card">
-                        <h3>Approved</h3>
+                        <h3>Resolved</h3>
                         <div class="value" id="approvedRequests">--</div>
-                        <div class="change positive">
-                            <!-- <i class="bi bi-arrow-up"></i> <span id="approvedChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change positive">
+                            <i class="bi bi-arrow-up"></i> <span id="approvedChange">Loading...</span>
+                        </div> -->
                     </div>
                     <div class="stat-card">
                         <h3>Pending</h3>
                         <div class="value" id="pendingRequests">--</div>
-                        <div class="change negative">
-                            <!-- <i class="bi bi-arrow-down"></i> <span id="pendingChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change negative">
+                            <i class="bi bi-arrow-down"></i> <span id="pendingChange">Loading...</span>
+                        </div> -->
                     </div>
                     <div class="stat-card">
-                        <h3>Processing</h3>
+                        <h3>Rejected</h3>
                         <div class="value" id="processingRequests">--</div>
-                        <div class="change positive">
-                            <!-- <i class="bi bi-arrow-up"></i> <span id="processingChange">Loading...</span> -->
-                        </div>
+                        <!-- <div class="change positive">
+                            <i class="bi bi-arrow-up"></i> <span id="processingChange">Loading...</span>
+                        </div> -->
                     </div>
                 </div>
 
@@ -735,9 +735,9 @@ try {
             // Update stats cards
             function updateStats(stats) {
                 document.getElementById('totalRequests').textContent = stats.total_requests || 0;
-                document.getElementById('approvedRequests').textContent = stats.approved_requests || 0;
+                document.getElementById('approvedRequests').textContent = stats.resolved_requests || 0;
                 document.getElementById('pendingRequests').textContent = stats.pending_requests || 0;
-                document.getElementById('processingRequests').textContent = stats.processing_requests || 0;
+                document.getElementById('processingRequests').textContent = stats.rejected_requests || 0;
             }
 
             // Update requests table with pagination
@@ -774,8 +774,8 @@ try {
                         } else if (status.includes('rejected') || status.includes('denied')) {
                             statusClass = 'status-rejected';
                             statusIcon = '<i class="bi bi-x-circle"></i> ';
-                        } else if (status.includes('processing') || status.includes('assigned') || status.includes('in progress')) {
-                            statusClass = 'status-processing';
+                        } else if (status.includes('processing') || status.includes('resubmitted') || status.includes('in-progress')) {
+                            statusClass = 'status-in-progress';
                             statusIcon = '<i class="bi bi-gear"></i> ';
                         }
 
@@ -793,17 +793,30 @@ try {
                             description;
 
                         row.innerHTML = `
-                        <td>${request.tracking_number || 'N/A'}</td>
-                        <td>${formattedDate}</td>
-                        <td>${request.category || 'N/A'}</td>
-                        <td title="${description}">${shortDescription}</td>
-                        <td><span class="status-badge ${statusClass}">${statusIcon}${request.request_status || 'N/A'}</span></td>
-                        <td>
-                            <button class="action-btn view-btn" data-id="${request.id}">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                        </td>
-                    `;
+                    <td>${request.tracking_number || 'N/A'}</td>
+                    <td>${formattedDate}</td>
+                    <td>${request.category || 'N/A'}</td>
+                    <td title="${description}">${shortDescription}</td>
+                    <td><span class="status-badge ${statusClass}">${statusIcon}${request.request_status || 'N/A'}</span></td>
+                    <td>
+                        <button class="action-btn view-btn" data-id="${request.id}">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                    </td>
+                `;
+
+                        // Add click event directly to the button
+                        const viewBtn = row.querySelector('.view-btn');
+                        viewBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const requestId = this.getAttribute('data-id');
+                            if (requestId) {
+                                window.location.href = `request-details.php?id=${requestId}`;
+                            } else {
+                                console.error('No request ID found for this item');
+                                showErrorToast('Could not view request: missing ID');
+                            }
+                        });
 
                         requestsTableBody.appendChild(row);
                     });
@@ -812,14 +825,6 @@ try {
                     if (response.data.length > rowsPerPage) {
                         addPaginationControls(response.data.length);
                     }
-
-                    // Add event listeners to view buttons
-                    document.querySelectorAll('.view-btn').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const requestId = this.getAttribute('data-id');
-                            window.location.href = `request-details.php?id=${requestId}`;
-                        });
-                    });
 
                 } else {
                     noRequestsMessage.style.display = 'block';
@@ -833,14 +838,14 @@ try {
                 const paginationDiv = document.createElement('div');
                 paginationDiv.className = 'pagination-controls';
                 paginationDiv.innerHTML = `
-                <button id="prevPage" class="btn-outline" ${currentPage === 1 ? 'disabled' : ''}>
-                    <i class="bi bi-chevron-left"></i> Previous
-                </button>
-                <span>Page ${currentPage} of ${totalPages}</span>
-                <button id="nextPage" class="btn-outline" ${currentPage === totalPages ? 'disabled' : ''}>
-                    Next <i class="bi bi-chevron-right"></i>
-                </button>
-            `;
+            <button id="prevPage" class="btn-outline" ${currentPage === 1 ? 'disabled' : ''}>
+                <i class="bi bi-chevron-left"></i> Previous
+            </button>
+            <span>Page ${currentPage} of ${totalPages}</span>
+            <button id="nextPage" class="btn-outline" ${currentPage === totalPages ? 'disabled' : ''}>
+                Next <i class="bi bi-chevron-right"></i>
+            </button>
+        `;
 
                 // Insert after table container
                 document.querySelector('.table-container').after(paginationDiv);
@@ -874,12 +879,12 @@ try {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.innerHTML = `
-                <div class="toast-icon">
-                    ${type === 'success' ? '<i class="bi bi-check-circle"></i>' : '<i class="bi bi-exclamation-circle"></i>'}
-                </div>
-                <div class="toast-message">${message}</div>
-                <button class="toast-close"><i class="bi bi-x"></i></button>
-            `;
+            <div class="toast-icon">
+                ${type === 'success' ? '<i class="bi bi-check-circle"></i>' : '<i class="bi bi-exclamation-circle"></i>'}
+            </div>
+            <div class="toast-message">${message}</div>
+            <button class="toast-close"><i class="bi bi-x"></i></button>
+        `;
 
                 document.body.appendChild(toast);
 
