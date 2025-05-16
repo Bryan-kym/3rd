@@ -6,7 +6,7 @@ require_once '../config.php';
 try {
     $userId = authenticate();
     $requestId = filter_input(INPUT_POST, 'request_id', FILTER_VALIDATE_INT);
-    
+
     if (!$requestId) {
         throw new Exception('Invalid request ID');
     }
@@ -22,7 +22,7 @@ try {
     $stmt->bind_param("ii", $requestId, $userId);
     $stmt->execute();
     $stmt->store_result();
-    
+
     if ($stmt->num_rows === 0) {
         throw new Exception('Request not found or cannot be edited');
     }
@@ -43,6 +43,58 @@ try {
 
     echo json_encode(['success' => true, 'message' => 'Request updated successfully']);
 
+    // Handle required documents upload
+    if (!empty($_FILES['required_docs'])) {
+        foreach ($_FILES['required_docs']['name'] as $docName => $fileData) {
+            if ($_FILES['required_docs']['error'][$docName] === UPLOAD_ERR_OK) {
+                $fileName = basename($_FILES['required_docs']['name'][$docName]);
+                $filePath = '../' . $uploadDir . uniqid() . '_' . $fileName;
+
+                if (move_uploaded_file($_FILES['required_docs']['tmp_name'][$docName], $filePath)) {
+                    $insertDoc = $conn->prepare("
+                    INSERT INTO requestors_documents 
+                    (request_id, requester_id, document_name, document_file_path) 
+                    VALUES (?, ?, ?, ?)
+                ");
+                    $insertDoc->bind_param(
+                        "iiss",
+                        $requestId,
+                        $request['requested_by'],
+                        $docName,
+                        $filePath
+                    );
+                    $insertDoc->execute();
+                }
+            }
+        }
+    }
+
+    // Handle additional documents upload
+    if (!empty($_FILES['additional_docs'])) {
+        foreach ($_FILES['additional_docs']['tmp_name'] as $key => $tmpName) {
+            if ($_FILES['additional_docs']['error'][$key] === UPLOAD_ERR_OK) {
+                $fileName = basename($_FILES['additional_docs']['name'][$key]);
+                $docName = $_POST['additional_doc_names'][$key] ?? $fileName;
+                $filePath = '../' . $uploadDir . uniqid() . '_' . $fileName;
+
+                if (move_uploaded_file($tmpName, $filePath)) {
+                    $insertDoc = $conn->prepare("
+                    INSERT INTO requestors_documents 
+                    (request_id, requester_id, document_name, document_file_path) 
+                    VALUES (?, ?, ?, ?)
+                ");
+                    $insertDoc->bind_param(
+                        "iiss",
+                        $requestId,
+                        $request['requested_by'],
+                        $docName,
+                        $filePath
+                    );
+                    $insertDoc->execute();
+                }
+            }
+        }
+    }
 } catch (Exception $e) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

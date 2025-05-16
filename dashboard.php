@@ -48,7 +48,9 @@ try {
                 --dark-grey: #343a40;
                 /* Dark Grey */
                 --success-color: #28a745;
+                --processing-color:rgb(46, 90, 235);
                 --warning-color: #ffc107;
+                --resubmitted-color:rgb(138, 29, 60);
                 --danger-color: #dc3545;
                 --border-radius: 0.375rem;
                 --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
@@ -78,7 +80,7 @@ try {
             }
 
             .welcome-card {
-                background: linear-gradient(135deg, var(--primary-color), #a81a22, var(--secondary-color));
+                background: linear-gradient(135deg, var(--secondary-color), #a81a22, var(--primary-color));
                 /* background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); */
                 color: var(--light-color);
                 padding: 2rem;
@@ -154,7 +156,7 @@ try {
                 background: var(--light-color);
                 padding: 1.5rem;
                 border-radius: var(--border-radius);
-                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                box-shadow: 0.25rem 0.25rem 0.25rem 0.25rem rgba(1, 0.5, 0.5, 0.075);
                 transition: var(--transition);
                 border-left: 4px solid var(--primary-color);
             }
@@ -298,6 +300,11 @@ try {
                 color: var(--warning-color);
             }
 
+            .status-resubmitted {
+                background-color: rgba(243, 119, 142, 0.1);
+                color: var(--resubmitted-color);
+            }
+
             .status-approved {
                 background-color: rgba(40, 167, 69, 0.1);
                 color: var(--success-color);
@@ -309,8 +316,8 @@ try {
             }
 
             .status-processing {
-                background-color: rgba(217, 35, 46, 0.1);
-                color: var(--primary-color);
+                background-color: rgba(71, 43, 233, 0.1);
+                color: var(--processing-color);
             }
 
             .action-btn {
@@ -774,9 +781,12 @@ try {
                         } else if (status.includes('rejected') || status.includes('denied')) {
                             statusClass = 'status-rejected';
                             statusIcon = '<i class="bi bi-x-circle"></i> ';
-                        } else if (status.includes('processing') || status.includes('assigned') || status.includes('in progress')) {
+                        } else if (status.includes('processing') || status.includes('assigned') || status.includes('initiated')) {
                             statusClass = 'status-processing';
                             statusIcon = '<i class="bi bi-gear"></i> ';
+                        } else if (status.includes('resubmitted')) {
+                            statusClass = 'status-resubmitted';
+                            statusIcon = '<i class="bi bi-arrow-clockwise"></i> ';
                         }
 
                         // Use the formatted date from the response

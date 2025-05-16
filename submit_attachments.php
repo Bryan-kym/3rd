@@ -170,10 +170,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Generate tracking ID
             $year = date("y");
             $result = $conn->query("SELECT MAX(CAST(SUBSTRING_INDEX(tracking_id, '/', -2) AS UNSIGNED)) AS last_number 
-                                    FROM requests WHERE tracking_id LIKE 'KRA/CDO/%/$year'");
+                                    FROM requests WHERE tracking_id LIKE 'KRA/DMA/%/$year'");
             $lastNumber = ($result && $row = $result->fetch_assoc()) ? intval($row['last_number']) : 0;
             $newTrackingNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-            $trackingID = "KRA/CDO/$newTrackingNumber/$year";
+            $trackingID = "KRA/DMA/$newTrackingNumber/$year";
 
             // Insert request
             $stmt2 = $conn->prepare("INSERT INTO requests (tracking_id, requested_by, description, specific_fields, period_from, period_to, request_purpose, date_requested, date_requested_dt) 
