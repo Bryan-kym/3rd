@@ -13,19 +13,23 @@ try {
 
     // Validate user owns this request
     $stmt = $conn->prepare("
-        SELECT r.id 
-        FROM requests r
-        JOIN requestors req ON r.requested_by = req.id
-        WHERE r.id = ? AND req.email = (SELECT email FROM ext_users WHERE id = ?)
-        AND r.request_status in ('pending', 'rejected')
-    ");
+SELECT r.id, r.requested_by
+FROM requests r
+JOIN requestors req ON r.requested_by = req.id
+WHERE r.id = ? AND req.email = (SELECT email FROM ext_users WHERE id = ?)
+AND r.request_status in ('pending', 'rejected')
+");
     $stmt->bind_param("ii", $requestId, $userId);
     $stmt->execute();
-    $stmt->store_result();
+    $result = $stmt->get_result();
+    $requestData = $result->fetch_assoc();
 
-    if ($stmt->num_rows === 0) {
+    if (!$requestData) {
         throw new Exception('Request not found or cannot be edited');
     }
+
+    // Now you can access the requested_by value
+    $requesterId = $requestData['requested_by'];
 
     // Get and sanitize input
     $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
@@ -49,6 +53,7 @@ try {
             if ($_FILES['required_docs']['error'][$docName] === UPLOAD_ERR_OK) {
                 $fileName = basename($_FILES['required_docs']['name'][$docName]);
                 $filePath = '../' . $uploadDir . uniqid() . '_' . $fileName;
+                $filepathdb = $uploadDir . uniqid() . '_' . $fileName;
 
                 if (move_uploaded_file($_FILES['required_docs']['tmp_name'][$docName], $filePath)) {
                     $insertDoc = $conn->prepare("
@@ -59,9 +64,9 @@ try {
                     $insertDoc->bind_param(
                         "iiss",
                         $requestId,
-                        $request['requested_by'],
+                        $requesterId,  // Use the fetched requester_id
                         $docName,
-                        $filePath
+                        $filePathdb
                     );
                     $insertDoc->execute();
                 }
@@ -76,6 +81,7 @@ try {
                 $fileName = basename($_FILES['additional_docs']['name'][$key]);
                 $docName = $_POST['additional_doc_names'][$key] ?? $fileName;
                 $filePath = '../' . $uploadDir . uniqid() . '_' . $fileName;
+                $filepathdb = $uploadDir . uniqid() . '_' . $fileName;
 
                 if (move_uploaded_file($tmpName, $filePath)) {
                     $insertDoc = $conn->prepare("
@@ -86,9 +92,9 @@ try {
                     $insertDoc->bind_param(
                         "iiss",
                         $requestId,
-                        $request['requested_by'],
+                        $requesterId,  // Use the fetched requester_id
                         $docName,
-                        $filePath
+                        $filePathdb
                     );
                     $insertDoc->execute();
                 }
